@@ -39,3 +39,5 @@ async def create_todo(db: db_dependency, todo_request: ProjectRequest):
 
     db.add(todo_model)
     db.commit()
+
+print ('Test string')
