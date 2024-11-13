@@ -1,43 +1,21 @@
-from typing import Annotated
-from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
-from fastapi import FastAPI, Depends, HTTPException, status, Path
-import models
-from models import Project
-from database import engine, SessionLocal
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from .models import Base
 
-from database import SessionLocal
+from .database import engine
+from .database_init import init_db
+from .routers import  auth, projects, users
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    await init_db()
+    yield
 
-models.Base.metadata.create_all(bind=engine)
+app = FastAPI(lifespan=lifespan)
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+Base.metadata.create_all(bind=engine)
 
-db_dependency = Annotated[Session, Depends(get_db)]
-
-class ProjectRequest(BaseModel):
-    title : str = Field(min_lenght=3)
-    description :str = Field(min_length=3, max_length=100)
-
-@app.get("/")
-def get_projects():
-    return {'message': 'Hello!'}
-
-@app.get("/Project", status_code=status.HTTP_200_OK)
-async def read_all(db: db_dependency):
-    return db.query(Project).all()
-
-@app.post("/Project", status_code=status.HTTP_201_CREATED)
-async def create_todo(db: db_dependency, todo_request: ProjectRequest):
-    todo_model = Project(**todo_request.model_dump())
-
-    db.add(todo_model)
-    db.commit()
-
-print ('Test string')
+# Routers
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(projects.router)
