@@ -1,3 +1,4 @@
 *.pyc
 backend/app/todosapp.db
 backend/app/fastapienv/*
+backend/*.db
