@@ -1,5 +1,6 @@
 from .database import Base
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Integer, String, Boolean, DATETIME
 
 class Roles(Base):
     __tablename__ = 'roles'
@@ -25,4 +26,28 @@ class Projects(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(String)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+class Images(Base):
+    __tablename__ = 'images'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    path = Column(String, unique=True)
+    upload_date = Column(DATETIME)
+    size_x = Column(Integer)
+    size_y = Column(Integer)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+class Labels(Base):
+    __tablename__ = 'labels'
+
+    id = Column(Integer, primary_key=True, index=True)
+    image_id = Column(Integer, ForeignKey("images.id"))
+    label = Column(String)
+    create_time = Column(DATETIME)
+    position_x1 = Column(Integer)
+    position_y1 = Column(Integer)
+    position_x2 = Column(Integer)
+    position_y2 = Column(Integer)
     owner_id = Column(Integer, ForeignKey("users.id"))
