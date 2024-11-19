@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from ..main import app
 from ..database import Base
+from ..database_init import add_role
 from ..models import Projects, Users
 from ..routers.auth import bcrypt_context
 
@@ -25,14 +26,16 @@ Base.metadata.create_all(bind=engine)
 
 def override_get_db():
     db = TestingSessionLocal()
-
+    # Add Roles
+    add_role(db, "Admin")
+    add_role(db, "User")
     try:
         yield db
     finally:
         db.close
 
 def override_get_current_user():
-    return {'username': 'johnny', 'id': 1, 'role': 'Admin'}
+    return {'username': 'johnny', 'id': 1, 'user_role': 'Admin'}
 
 client = TestClient(app)
 

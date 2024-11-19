@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Path, status, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from ..database import SessionLocal
-from ..models import Users
+from ..models import Users, Roles
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -36,11 +36,11 @@ async def get_user(user: user_dependency, db: db_dependency):
         raise HTTPException(status_code=401, detail='Authentication Failed')
     
     user_info = db.query(Users).filter(Users.id == user.get('id')).first()
-    print(f"Hell :{dir(user_info)}")
-    user_info.role = user.get('username')
-    print(f"Role :{user.get('username')}")
-    #print(f"Role :{user.role_id}")
-    return db.query(Users).filter(Users.id == user.get('id')).first()
+    print(f"Hello :{dir(user_info)}")
+    user_info.role = db.query(Roles).filter(Roles.id == user_info.role_id).first().name
+    print(f"Role: {user_info.role}")
+    print(f"Role_id: {user_info.role_id}")
+    return user_info
 
 @router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
 async def update_password(user: user_dependency,

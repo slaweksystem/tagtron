@@ -8,11 +8,12 @@ app.dependency_overrides[get_current_user] = override_get_current_user
 def test_return_user(test_user):
     response = client.get("/user")
     assert response.status_code == status.HTTP_200_OK
+    print(response.json())
     assert response.json()['username'] == 'johnny'
     assert response.json()['email'] == 'johnnybravo@example.com'
     assert response.json()['first_name'] == "Johnny"
     assert response.json()['last_name'] == "Bravo"
-    assert response.json()['role'] == "User"
+    assert response.json()['role'] == "Admin"
 
 def test_change_password_success(test_user):
     response = client.put("/user/password", json={"password": "testpassword",
