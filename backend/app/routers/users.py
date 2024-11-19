@@ -34,6 +34,12 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated = 'auto')
 async def get_user(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
+    
+    user_info = db.query(Users).filter(Users.id == user.get('id')).first()
+    print(f"Hell :{dir(user_info)}")
+    user_info.role = user.get('username')
+    print(f"Role :{user.get('username')}")
+    #print(f"Role :{user.role_id}")
     return db.query(Users).filter(Users.id == user.get('id')).first()
 
 @router.put("/password", status_code=status.HTTP_204_NO_CONTENT)

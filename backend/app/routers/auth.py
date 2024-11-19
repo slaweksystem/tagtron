@@ -135,6 +135,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         return 'Failed Authentication'
     
     role = "User"
-    token =  create_access_token(user.username, user.id, role, timedelta(minutes=20))
+    token =  create_access_token(user.username, user.id, role, timedelta(hours=8))
 
     return {'access_token': token, 'token_type': 'bearer'}

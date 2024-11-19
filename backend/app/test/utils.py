@@ -32,7 +32,7 @@ def override_get_db():
         db.close
 
 def override_get_current_user():
-    return {'username': 'johnny', 'id':1, 'user_role': 'Admin'}
+    return {'username': 'johnny', 'id': 1, 'role': 'Admin'}
 
 client = TestClient(app)
 
