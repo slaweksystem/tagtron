@@ -16,11 +16,10 @@ def test_return_user(test_user):
     assert response.json()['role'] == "Admin"
 
 def test_change_password_success(test_user):
-    response = client.put("/user/password", json={"password": "testpassword",
-                                                  "new_password": "newpassword"})
+    response = client.put("/user/password", json={"password": "1ubiepl@cki",
+                                                  "new_password": "nielubiep!@ck0w"})
     
     assert response.status_code == status.HTTP_204_NO_CONTENT
-
 
 def test_change_password_invalid_current_password(test_user):
     response = client.put("/user/password", json={"password": "wrong_password",
