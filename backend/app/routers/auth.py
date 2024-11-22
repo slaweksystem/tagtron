@@ -61,7 +61,6 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 def authenticate_user(username: str, password: str, db: Session):
-    print("debug here authenticate user")
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
         return False
@@ -71,7 +70,6 @@ def authenticate_user(username: str, password: str, db: Session):
     return user
 
 def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta): 
-    print("debug here create accerss token")
     encode = {'sub': username, 'id': user_id, 'role': role}
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({'exp': expires})

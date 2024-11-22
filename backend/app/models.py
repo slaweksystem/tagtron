@@ -37,6 +37,7 @@ class Images(Base):
     upload_date = Column(DATETIME)
     size_x = Column(Integer)
     size_y = Column(Integer)
+    project_id = Column(Integer, ForeignKey("projects.id"))
     owner_id = Column(Integer, ForeignKey("users.id"))
 
 class Labels(Base):
@@ -53,7 +54,7 @@ class Labels(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
 
 class ProjectUsers(Base):
-    __tablename__ = "project_users"
+    __tablename__ = 'project_users'
 
     id =  Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"))

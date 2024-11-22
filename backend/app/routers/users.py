@@ -43,7 +43,6 @@ async def get_user(user: user_dependency, db: db_dependency):
 async def update_password(user: user_dependency,
                           user_new_password: ChangePassword,
                           db: db_dependency):
-    print(user)
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
     
