@@ -61,6 +61,7 @@ def get_db():
 db_dependency = Annotated[Session, Depends(get_db)]
 
 def authenticate_user(username: str, password: str, db: Session):
+    print("debug here authenticate user")
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
         return False
@@ -70,6 +71,7 @@ def authenticate_user(username: str, password: str, db: Session):
     return user
 
 def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta): 
+    print("debug here create accerss token")
     encode = {'sub': username, 'id': user_id, 'role': role}
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({'exp': expires})
@@ -96,7 +98,6 @@ async def create_user(db: db_dependency,
     # fetch default role
     role_id = db.query(Roles).filter(Roles.name == "User").first().id
 
-    print("Here OK, {}")
     create_user_model = Users(
         username = create_user_request.username,
         email = create_user_request.email,
@@ -130,9 +131,8 @@ async def update_password(user: user_dependency,
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                                   db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
-
     if not user:
-        return 'Failed Authentication'
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password",)
     
     role = "User"
     token =  create_access_token(user.username, user.id, role, timedelta(hours=8))
