@@ -3,13 +3,13 @@ from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer, String, Boolean, DATETIME
 
 class Roles(Base):
-    __tablename__ = 'tagtron_roles'
+    __tablename__ = 'roles'
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True)
 
 class Users(Base):
-    __tablename__ = 'tagtron_users'
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True)
@@ -18,18 +18,18 @@ class Users(Base):
     last_name = Column(String)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-    role_id = Column(Integer, ForeignKey("tagtron_roles.id"))
+    role_id = Column(Integer, ForeignKey("roles.id"))
 
 class Projects(Base):
-    __tablename__ = 'tagtron_projects'
+    __tablename__ = 'projects'
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     description = Column(String)
-    owner_id = Column(Integer, ForeignKey("tagtron_users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
 
 class Images(Base):
-    __tablename__ = 'tagtron_images'
+    __tablename__ = 'images'
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
@@ -37,24 +37,24 @@ class Images(Base):
     upload_date = Column(DATETIME)
     size_x = Column(Integer)
     size_y = Column(Integer)
-    owner_id = Column(Integer, ForeignKey("tagtron_users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
 
 class Labels(Base):
-    __tablename__ = 'tagtron_labels'
+    __tablename__ = 'labels'
 
     id = Column(Integer, primary_key=True, index=True)
-    image_id = Column(Integer, ForeignKey("tagtron_images.id"))
+    image_id = Column(Integer, ForeignKey("images.id"))
     label = Column(String)
     create_time = Column(DATETIME)
     position_x1 = Column(Integer)
     position_y1 = Column(Integer)
     position_x2 = Column(Integer)
     position_y2 = Column(Integer)
-    owner_id = Column(Integer, ForeignKey("tagtron_users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
 
 class ProjectUsers(Base):
-    __tablename__ = "tagtron_project_users"
+    __tablename__ = "project_users"
 
     id =  Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("tagtron_projects.id"))
-    user_id = Column(Integer, ForeignKey("tagtron_users.id"))
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
