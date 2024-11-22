@@ -52,7 +52,7 @@ def test_Projects():
     db.commit()
     yield project
     with engine.connect() as connection:
-        connection.execute(text("DELETE FROM projects;"))
+        connection.execute(text("DELETE FROM tagtron_projects;"))
         connection.commit()
 
 @pytest.fixture
@@ -70,5 +70,5 @@ def test_user():
     db.commit()
     yield user
     with engine.connect() as connection:
-        connection.execute(text("DELETE FROM users;"))
+        connection.execute(text("DELETE FROM tagtron_users;"))
         connection.commit()
