@@ -1,13 +1,43 @@
 import React, { useState } from "react";
 
-const Login = ({ handleLogin, setIsRegistering }) => {
+const Login = ({ setIsRegistering, handleLogin }) => {
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState(""); // Nowe pole na hasło
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null); // Reset error on new attempt
+
     if (username && password) {
-      handleLogin(username); // Zaloguj użytkownika
+      try {
+        const response = await fetch("http://localhost:8000/auth/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            username: username,
+            password: password,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Token received:", data.access_token);
+          // Save the token (for example, in localStorage)
+          localStorage.setItem("access_token", data.access_token);
+          // Optionally, redirect the user or update the state
+          handleLogin(username)
+        } else {
+          // Handle login errors
+          const errorData = await response.json();
+          setError(errorData.detail || "Login failed");
+        }
+      } catch (err) {
+        setError("Something went wrong. Please try again.");
+        console.error(err);
+      }
     }
   };
 
@@ -31,7 +61,7 @@ const Login = ({ handleLogin, setIsRegistering }) => {
           }}
         />
         <input
-          type="password" // Typ zmieniony na 'password'
+          type="password"
           placeholder="Wpisz hasło"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -56,6 +86,7 @@ const Login = ({ handleLogin, setIsRegistering }) => {
         >
           Zaloguj
         </button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
       </form>
       <p>
         Nie masz konta?{" "}

@@ -1,28 +1,60 @@
 import React, { useState } from "react";
 
-const Register = ({ setIsRegistering, handleLogin }) => {
-  const [email, setEmail] = useState(""); // Nowe pole na email
+const Register = ({ setIsRegistering }) => {
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState(""); // Nowe pole na hasło
-  const [emailError, setEmailError] = useState(""); // Stan na błędy e-maila
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
-  // Funkcja walidująca e-mail
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
+
     if (!validateEmail(email)) {
       setEmailError("Podaj poprawny adres e-mail.");
       return;
     } else {
-      setEmailError(""); // Resetujemy błąd
+      setEmailError("");
     }
 
-    if (email && username && password) {
-      handleLogin(username); // Po rejestracji logujemy użytkownika
+    if (email && username && password && firstName && lastName) {
+      try {
+        const response = await fetch("http://localhost:8000/auth/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            username,
+            password,
+            first_name: firstName,
+            last_name: lastName,
+          }),
+        });
+
+        if (response.ok) {
+          setSuccess(true);
+          setError(null);
+          console.log("User registered successfully");
+        } else {
+          const errorData = await response.json();
+          setError(errorData.detail || "Registration failed");
+        }
+      } catch (err) {
+        setError("Something went wrong. Please try again.");
+        console.error(err);
+      }
     }
   };
 
@@ -41,14 +73,37 @@ const Register = ({ setIsRegistering, handleLogin }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: emailError ? "1px solid red" : "1px solid #ddd", // Kolor ramki w przypadku błędu
+            border: emailError ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
         {emailError && (
           <span style={{ color: "red", fontSize: "12px" }}>{emailError}</span>
-        )}{" "}
-        {/* Wyświetlamy błąd */}
+        )}
+        <input
+          type="text"
+          placeholder="Wpisz imię"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          style={{
+            padding: "10px",
+            fontSize: "16px",
+            border: "1px solid #ddd",
+            borderRadius: "5px",
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Wpisz nazwisko"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          style={{
+            padding: "10px",
+            fontSize: "16px",
+            border: "1px solid #ddd",
+            borderRadius: "5px",
+          }}
+        />
         <input
           type="text"
           placeholder="Wpisz nazwę użytkownika"
@@ -62,7 +117,7 @@ const Register = ({ setIsRegistering, handleLogin }) => {
           }}
         />
         <input
-          type="password" // Typ zmieniony na 'password'
+          type="password"
           placeholder="Wpisz hasło"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -87,6 +142,8 @@ const Register = ({ setIsRegistering, handleLogin }) => {
         >
           Zarejestruj
         </button>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {success && <p style={{ color: "green" }}>Rejestracja zakończona sukcesem!</p>}
       </form>
       <p>
         Masz już konto?{" "}
