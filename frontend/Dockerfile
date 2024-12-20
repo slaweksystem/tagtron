@@ -1,27 +1,29 @@
-# Stage 1: Build the React app
-FROM node:16-alpine AS build
+# Etap 1: Budowa aplikacji
+FROM node:18 AS build
 
-# Set the working directory
+# Ustawienie katalogu roboczego
 WORKDIR /app
 
-# Copy the package.json and install dependencies
+# Skopiowanie plików package.json i package-lock.json
 COPY package*.json ./
+
+# Instalacja zależności
 RUN npm install
 
-# Copy the rest of the application files
+# Skopiowanie całego projektu
 COPY . .
 
-# Build the React app
+# Budowa aplikacji Vite
 RUN npm run build
 
-# Stage 2: Serve the app with NGINX
+# Etap 2: Serwowanie aplikacji na Nginx
 FROM nginx:alpine
 
-# Copy the built React app from the build stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Skopiowanie zbudowanych plików do katalogu Nginx
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Expose port 80
+# Ekspozycja portu 80
 EXPOSE 80
 
-# Start NGINX
+# Uruchomienie serwera Nginx
 CMD ["nginx", "-g", "daemon off;"]
