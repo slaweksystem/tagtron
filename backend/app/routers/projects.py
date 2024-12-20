@@ -2,12 +2,11 @@ from typing import Annotated
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, status, Path
+from fastapi import Depends, HTTPException, status
 from ..models import Base
 from ..models import Projects
 from ..database import engine, SessionLocal
 from .auth import get_current_user
-from ..routers import auth
 
 from fastapi import APIRouter
 
