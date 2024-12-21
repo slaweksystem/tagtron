@@ -19,7 +19,7 @@ const AccountScreen = ({ loggedInUser }) => {
           cursor: "pointer",
         }}
       >
-        Zmień hasłooo
+        Zmień hasło
       </button>
     </div>
   );
