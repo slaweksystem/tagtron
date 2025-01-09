@@ -59,3 +59,10 @@ class ProjectUsers(Base):
     id =  Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
+    role_id = Column(Integer, ForeignKey("project_roles.id"))
+
+class ProjectRoles(Base):
+    __tablename__ = 'project_roles'
+
+    id =  Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)

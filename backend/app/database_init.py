@@ -33,5 +33,8 @@ def add_project_role(db: Session,role: str):
 async def init_db():
     """Initializes the database with default data, like the default role."""
     db = SessionLocal()
+    # Add role
+    add_role("User")
+    add_role("Admin")
     add_project_role(db, "User")
     add_project_role(db, "Modder")
