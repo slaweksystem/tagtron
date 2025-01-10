@@ -1,38 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Canvas from "./Canvas";
 import AddGroupModal from "./AddGroupModal";
 
 const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
-  const [projects, setProjects] = useState([
-    { id: 1, name: "Projekt Alpha" },
-    { id: 2, name: "Projekt Beta" },
-    { id: 3, name: "Projekt Gamma" },
-    { id: 4, name: "Projekt Delta" },
-  ]);
+  const [projects, setProjects] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // Nowy stan do przechowywania zapytania wyszukiwania
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleProjectSelect = (projectName) => {
-    setSelectedProject(projectName);
+  // Pobieranie danych projektów z API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/projects/", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch projects");
+        }
+        const data = await response.json();
+        setProjects(data); // Przechowywanie pełnych danych projektów
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
   };
 
-  const handleAddGroup = (groupName) => {
-    setProjects((prevProjects) => [
-      ...prevProjects,
-      { id: prevProjects.length + 1, name: groupName },
-    ]);
+  const handleAddGroup = async () => {
+    // Funkcjonalność dodawania grupy
   };
 
-  // Filtrowanie projektów na podstawie zapytania
+  // Filtrowanie projektów według wyszukiwania
   const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+    project.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (selectedProject) {
     return (
       <div>
-        <h2 style={{ textAlign: "center" }}>{selectedProject}</h2>
-        <Canvas />
+        <h2 style={{ textAlign: "center" }}>{selectedProject.title}</h2>
+        <Canvas
+          projectDescription={selectedProject.description}
+          projectId={selectedProject.id}
+        />
       </div>
     );
   }
@@ -104,7 +121,7 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
         {filteredProjects.map((project) => (
           <button
             key={project.id}
-            onClick={() => handleProjectSelect(project.name)}
+            onClick={() => handleProjectSelect(project)}
             style={{
               padding: "40px",
               fontSize: "16px",
@@ -116,12 +133,11 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
               textAlign: "center",
             }}
           >
-            {project.name}
+            {project.title}
           </button>
         ))}
       </div>
 
-      {/* Modal do dodawania grupy */}
       <AddGroupModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
