@@ -34,7 +34,7 @@ bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated = 'auto')
 async def get_user(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
-    
+
     user_info = db.query(Users).filter(Users.id == user.get('id')).first()
     user_info.role = db.query(Roles).filter(Roles.id == user_info.role_id).first().name
     return user_info
@@ -45,12 +45,24 @@ async def update_password(user: user_dependency,
                           db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
-    
     user_data = db.query(Users).filter(Users.id == user.get('id')).first()
-
     if not bcrypt_context.verify(user_new_password.password, user_data.hashed_password):
         raise HTTPException(status_code=401, detail='Error on password change')
     user_data.hashed_password = bcrypt_context.hash(user_new_password.password)
-
     db.add(user_data)
+    db.commit()
+
+
+@router.delete("/{username}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user: user_dependency,
+                          db: db_dependency,
+                          username: str = Path()):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    user_data = db.query(Users).filter(Users.id == user.get('id')).first()
+    role = db.query(Roles).filter(Roles.id == user_data.role_id).first().name
+    if role != "Admin":
+        raise HTTPException(status_code=401, detail='Unauthorized')
+    user_delete_data = db.query(Users).filter(Users.username == username).first()
+    db.delete(user_delete_data)
     db.commit()
