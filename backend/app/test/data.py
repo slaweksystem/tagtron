@@ -8,7 +8,7 @@ data_users = [
         first_name="Johnny",
         last_name="Bravo",
         hashed_password=bcrypt_context.hash("1ubiepl@cki"),
-        role_id="2",
+        role_id="1",
     ),
     Users(
         username="sarah",
