@@ -49,3 +49,53 @@ def test_remove_user_from_project():
     id = response_add.json()['id']
     response = client.delete(f"/projects/users/delete_id/{id}")
     assert response.status_code == 204
+
+def test_add_users_to_project_email(test_user):
+    # First Create a project
+    payload_project = {
+        "title": "Example project for Addig user",
+        "description": "Add user with easy method"
+    }
+    response = client.post("/projects/", json=payload_project)
+    project_id = response.json()['id']
+
+    # Create user
+    payload_user = {
+                "username": "johnnytestaddproject",
+                "email": "johnnytestaddproject@example.com",
+                "first_name": "Johnny",
+                "last_name": "test",
+                "password": "test1234", 
+              }
+    response = client.post("/auth/", json = payload_user)
+    user_id = response.json()["id"]
+    print(f"Debug: id user:  {user_id}")
+    # Test Add User
+    payload_add_project = {
+        "project_title": payload_project["title"],
+        "user_email": payload_user["email"],
+        "role": "Modder"
+    }
+    response = client.post("projects/users/email/", json = payload_add_project)
+    # Test Creation
+    assert response.status_code == 201
+    
+    
+    # Test Invalid Role
+    payload_add_project["Role"] = "Wrong_role"
+    response = client.post("projects/users/email/", json = payload_add_project)
+    assert response.status_code == 404
+
+    # Test Wrong User
+    payload_add_project["user_email"] = "Wrong@email"
+    response = client.post("projects/users/email/", json = payload_add_project)
+    assert response.status_code == 404
+
+    # Test Wrong Project
+    payload_add_project["project_title"] = "Wrong-Project"
+    response = client.post("projects/users/email/", json = payload_add_project)
+    assert response.status_code == 404
+
+    # Cleanup - to be fixed later. Shouldn't be done in here, but gonna leave it for now
+    client.delete(f"/projects/{project_id}")
+    client.delete(f"/users/{user_id}")

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from ..main import app
 from ..database import Base
-from ..database_init import add_role
+from ..database_init import add_project_role, add_role
 from ..models import Projects, Users
 from ..routers.auth import bcrypt_context
 
@@ -32,6 +32,9 @@ def override_get_db():
     # Add Roles
     add_role(db, "Admin")
     add_role(db, "User")
+    add_project_role(db, "Owner")
+    add_project_role(db, "User")
+    add_project_role(db, "Modder")
     try:
         yield db
     finally:

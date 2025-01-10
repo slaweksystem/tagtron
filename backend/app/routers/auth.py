@@ -109,6 +109,8 @@ async def create_user(db: db_dependency,
     db.add(create_user_model)
     db.commit()
 
+    return {"message": "User created", "id" : create_user_model.id}
+
 @router.put("/", status_code=status.HTTP_204_NO_CONTENT)
 async def update_password(user: user_dependency,
                           user_new_password: ChangePassword,
