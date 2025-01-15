@@ -19,3 +19,13 @@ or yuou can use the env file with command, example:
 docker compose --env-file ./config/.env.dev up
 ```
 
+## FastAPI
+
+w Projekcie od zstrony  backendowej balblabkla użyto Fast APi - 
+
+
+### wylistować endpointy 
+ 
+#### auth
+
+`register` - endpoint odpoiwada za - przyjmuje takie argumenty blablabla
