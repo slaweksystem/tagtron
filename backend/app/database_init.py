@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from .database import SessionLocal
-from .models import Roles, ProjectRoles, Users, Projects
+from .models import Roles, ProjectRoles, Users, Projects, ProjectUsers
 
-from .test.data import data_users, data_projects
+from .test.data import data_users, data_projects, data_projects_users
 
-def add_role(db: Session, role: str):
+def add_role(db: Session, role: str, id: int):
     try:
         # Check if the default role already exists
         if not db.query(Roles).filter(Roles.name == role).first():
@@ -18,7 +18,7 @@ def add_role(db: Session, role: str):
     finally:
         db.close()
 
-def add_project_role(db: Session, role: str):
+def add_project_role(db: Session, role: str, id: int):
     try:
         # Check if the default project role already exists
         if not db.query(ProjectRoles).filter(ProjectRoles.name == role).first():
@@ -48,17 +48,28 @@ def add_projects(db: Session):
             db.add(test_project)
             db.commit()
 
+# Test Project Users
+def add_project_users(db: Session):
+    for test_user_project in data_projects_users:
+        project_user = db.query(ProjectUsers)\
+            .filter(ProjectUsers.user_id == test_user_project.user_id,
+                    ProjectUsers.project_id == test_user_project.project_id)\
+            .first()
+        if not project_user:
+            db.add(test_user_project)
+            db.commit()
+
 async def init_db():
     """Initializes the database with default data, like the default role."""
     db = SessionLocal()
     # Add role
-    add_role(db, "User")
-    add_role(db, "Admin")
-    add_project_role(db, "Owner")
-    add_project_role(db, "User")
-    add_project_role(db, "Modder")
+    add_role(db, "User", 1)
+    add_role(db, "Admin", 2)
+    add_project_role(db, "Owner", 1)
+    add_project_role(db, "User", 2)
+    add_project_role(db, "Modder", 3)
     add_users(db)
     add_projects(db)
-
+    add_project_users(db)
 
     

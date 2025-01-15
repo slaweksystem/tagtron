@@ -1,4 +1,4 @@
-from ..models import Users, Projects
+from ..models import Users, Projects, ProjectUsers
 from ..routers.auth import bcrypt_context
 
 data_users = [
@@ -114,5 +114,43 @@ data_projects = [
         title="Duckburg Artifact Scanner",
         description="Creating a labeled image library of treasures and artifacts for Scrooge McDuck's vault inventory system.",
         owner_id=5
+    )
+]
+
+data_projects_users = [
+    ProjectUsers(
+        project_id = 1,
+        user_id = 1,
+        role_id = 1
+    ),
+    ProjectUsers(
+        project_id = 1,
+        user_id = 3,
+        role_id = 2
+    ),
+    ProjectUsers(
+        project_id = 2,
+        user_id = 1,
+        role_id = 1
+    ),
+    ProjectUsers(
+        project_id = 3,
+        user_id = 2,
+        role_id = 1
+    ),
+    ProjectUsers(
+        project_id = 4,
+        user_id = 3,
+        role_id = 1
+    ),
+    ProjectUsers(
+        project_id = 5,
+        user_id = 4,
+        role_id = 1
+    ),
+    ProjectUsers(
+        project_id = 6,
+        user_id = 5,
+        role_id = 1
     )
 ]

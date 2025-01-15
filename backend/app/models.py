@@ -1,6 +1,6 @@
 from .database import Base
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy import Integer, String, Boolean, DATETIME
+from sqlalchemy import Integer, String, Boolean, TIMESTAMP
 
 class Roles(Base):
     __tablename__ = 'roles'
@@ -34,7 +34,7 @@ class Images(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     path = Column(String, unique=True)
-    upload_date = Column(DATETIME)
+    upload_date = Column(TIMESTAMP)
     size_x = Column(Integer)
     size_y = Column(Integer)
     project_id = Column(Integer, ForeignKey("projects.id"))
@@ -46,7 +46,7 @@ class Labels(Base):
     id = Column(Integer, primary_key=True, index=True)
     image_id = Column(Integer, ForeignKey("images.id"))
     label = Column(String)
-    create_time = Column(DATETIME)
+    create_time = Column(TIMESTAMP)
     position_x1 = Column(Integer)
     position_y1 = Column(Integer)
     position_x2 = Column(Integer)
