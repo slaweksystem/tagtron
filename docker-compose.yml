@@ -19,6 +19,8 @@ services:
       POSTGRES_HOST: ${POSTGRES_HOST}
     ports:
       - "8000:8000"
+    volumes:
+      - backend_media:/app/media
     depends_on:
       - postgres
     networks:
@@ -49,6 +51,7 @@ services:
 
 volumes:
   postgres_data:
+  backend_media:
 
 networks:
   tagtron_network:
