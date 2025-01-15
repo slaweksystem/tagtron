@@ -2,7 +2,10 @@ from typing import Annotated
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, status, Path
+from sqlalchemy import select
+from fastapi import Depends, HTTPException, status, Path , Query, status
+from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import Page, paginate
 from ..models import Base, ProjectRoles, Roles
 from ..models import Projects
 from ..models import ProjectUsers
@@ -54,8 +57,18 @@ class UserProjectRequestEmail(BaseModel):
     }
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def read_all(db: db_dependency):
-    return db.query(Projects).all()
+async def read_all(
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1),
+    db: Session = Depends(get_db)
+):
+    """
+    Read all projects with pagination.
+    - `offset`: Number of items to skip (default: 0)
+    - `limit`: Maximum number of items to return (default: 10)
+    """
+    projects = db.query(Projects).offset(offset).limit(limit).all()
+    return projects
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_project(user: user_dependency,
@@ -84,24 +97,51 @@ async def delete_project(project_id: int, db: Session = Depends(get_db)):
 async def get_users(user: user_dependency,
                     db: db_dependency,
                     project_id: int = Path(gt=0)):
+    
+    # Ensure user is authenticated
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
     
-    project_users_model = db.query(ProjectUsers).filter(ProjectUsers.project_id == project_id)
+     # Check if the user is assigned to the project
+    is_assigned = (
+        db.query(ProjectUsers)
+        .filter(ProjectUsers.project_id == project_id, ProjectUsers.user_id == user['id'])
+        .first()
+    )
+
+    is_owner = (
+        db.query(Projects.id == project_id, Projects.owner_id == user['id'])
+    )
+
+    is_admin = (
+        db.query(Users.id == user['id'], Users.role_id == 2)
+                )
+
+    if not is_assigned and not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="You are not allowed to view this project")
     
+    # Fetch users assigned to the project
+    project_users = (
+        db.query(ProjectUsers, Users)
+        .join(Users, ProjectUsers.user_id == Users.id)
+        .filter(ProjectUsers.project_id == project_id)
+        .all()
+    )
+
+    users_list = [
+        {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role_id": project_user.role_id,
+        }
+        for project_user, user in project_users
+    ]
+
     return JSONResponse(
-            content={"users": [
-                        {
-                            "id" : 1,
-                            "email" : "johnnybravo@example.com",
-                            "username" : "johnny",
-                            "first_name" : "Johnny",
-                            "last_name" : "Bravo",
-                            "role_id" : "1"
-                        }
-                    ],
-                    "message": ""},
-                    status_code=200
+        content={"users": users_list, "message": ""}, status_code=200
     )
 
 # Add a user to a project
@@ -160,7 +200,6 @@ async def add_user_email(user: user_dependency,
     
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
-    print(f"Debug: user info: {user}")
     # user info
     user_data = db.query(Users).filter(Users.id == user.get('id')).first()
     if user_data is None:
@@ -188,7 +227,6 @@ async def add_user_email(user: user_dependency,
     else:
         user_project_role = "None"
     
-    print(f"Debug {user_role}")
     # Check if user can add other users:
     if project_data.owner_id == user_data.id or \
        user_project_role == 'Modder' or \
