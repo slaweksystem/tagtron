@@ -46,13 +46,13 @@ const Register = ({ setIsRegistering }) => {
         if (response.ok) {
           setSuccess(true);
           setError(null);
-          console.log("User registered successfully");
+          console.log("Użytkownik zarejestrował się pomyślnie");
         } else {
           const errorData = await response.json();
           setError(errorData.detail || "Registration failed");
         }
       } catch (err) {
-        setError("Something went wrong. Please try again.");
+        setError("Coś poszło nie tak. Spróbuj ponownie.");
         console.error(err);
       }
     }
@@ -143,7 +143,9 @@ const Register = ({ setIsRegistering }) => {
           Zarejestruj
         </button>
         {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>Rejestracja zakończona sukcesem!</p>}
+        {success && (
+          <p style={{ color: "green" }}>Rejestracja zakończona sukcesem!</p>
+        )}
       </form>
       <p>
         Masz już konto?{" "}

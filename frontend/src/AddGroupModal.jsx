@@ -32,11 +32,11 @@ const AddGroupModal = ({ isOpen, onClose, onAddGroup }) => {
         setGroupDescription(""); // Resetuj pole opisu
         onClose(); // Zamknij okno
       } catch (error) {
-        console.error("Error adding project:", error);
-        alert("Error adding project. Please try again.");
+        console.error("Błąd podczas dodawania projektu:", error);
+        alert("Błąd podczas dodawania projektu. Spróbuj ponownie.");
       }
     } else {
-      alert("Both fields are required.");
+      alert("Obydwa pola są wymagane.");
     }
   };
 

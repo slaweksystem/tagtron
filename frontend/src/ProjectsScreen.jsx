@@ -7,21 +7,31 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Paginacja
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Liczba projektów na stronie
+
   // Pobieranie danych projektów z API
-  const fetchProjects = async () => {
+  const fetchProjects = async (page = 1) => {
+    const offset = 0; //offset w query
+    const limit = itemsPerPage + 10; //limit w query
+
     try {
-      const response = await fetch("http://localhost:8000/projects/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8000/projects/?offset=${offset}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        }
+      );
       if (!response.ok) {
-        throw new Error("Failed to fetch projects");
+        throw new Error("Nie udało się pobrać projektów");
       }
       const data = await response.json();
-      setProjects(data); // Przechowywanie pełnych danych projektów
+      setProjects(data); // Przechowywanie pobranych danych projektów
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error("Błąd podczas pobierania projektów:", error);
     }
   };
 
@@ -35,15 +45,30 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
   };
 
   const handleAddGroup = async () => {
-    // Funkcjonalność dodawania grupy
-    // After adding, refresh the list of projects
-    fetchProjects(); // Re-fetch projects
+    fetchProjects(); // Re-fetch projects after adding
   };
 
   // Filtrowanie projektów według wyszukiwania
   const filteredProjects = projects.filter((project) =>
     project.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Logika paginacji
+  const indexOfLastProject = currentPage * itemsPerPage;
+  const indexOfFirstProject = indexOfLastProject - itemsPerPage;
+  const currentProjects = filteredProjects.slice(
+    indexOfFirstProject,
+    indexOfLastProject
+  );
+
+  // Zmienianie strony
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Obliczanie liczby stron
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(filteredProjects.length / itemsPerPage); i++) {
+    pageNumbers.push(i);
+  }
 
   if (selectedProject) {
     return (
@@ -52,7 +77,7 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
         <Canvas
           projectDescription={selectedProject.description}
           projectId={selectedProject.id}
-          projectTitle={selectedProject.ti}
+          projectTitle={selectedProject.title}
         />
       </div>
     );
@@ -122,7 +147,7 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
           marginTop: "20px",
         }}
       >
-        {filteredProjects.map((project) => (
+        {currentProjects.map((project) => (
           <button
             key={project.id}
             onClick={() => handleProjectSelect(project)}
@@ -140,6 +165,32 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
             {project.title}
           </button>
         ))}
+      </div>
+
+      {/* Paginacja */}
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <ul
+          style={{ listStyleType: "none", padding: 0, display: "inline-flex" }}
+        >
+          {pageNumbers.map((number) => (
+            <li key={number} style={{ margin: "0 5px" }}>
+              <button
+                onClick={() => paginate(number)}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "16px",
+                  backgroundColor: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              >
+                {number}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <AddGroupModal

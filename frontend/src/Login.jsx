@@ -28,14 +28,14 @@ const Login = ({ setIsRegistering, handleLogin }) => {
           // Save the token (for example, in localStorage)
           localStorage.setItem("access_token", data.access_token);
           // Optionally, redirect the user or update the state
-          handleLogin(username)
+          handleLogin(username);
         } else {
           // Handle login errors
           const errorData = await response.json();
           setError(errorData.detail || "Login failed");
         }
       } catch (err) {
-        setError("Something went wrong. Please try again.");
+        setError("Coś poszło nie tak. Spróbuj ponownie");
         console.error(err);
       }
     }
