@@ -8,7 +8,7 @@ const AddGroupModal = ({ isOpen, onClose, onAddGroup }) => {
     if (newGroupName.trim() && groupDescription.trim()) {
       try {
         // Wywołanie API do dodania projektu
-        const response = await fetch("http://localhost:8000/projects", {
+        const response = await fetch("http://localhost:8000/projects/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -73,7 +73,7 @@ const AddGroupModal = ({ isOpen, onClose, onAddGroup }) => {
           onChange={(e) => setNewGroupName(e.target.value)}
           placeholder="Nazwa grupy"
           style={{
-            width: "100%",
+            width: "90%",
             padding: "10px",
             fontSize: "16px",
             margin: "10px 0",
@@ -86,7 +86,7 @@ const AddGroupModal = ({ isOpen, onClose, onAddGroup }) => {
           onChange={(e) => setGroupDescription(e.target.value)}
           placeholder="Opis grupy"
           style={{
-            width: "100%",
+            width: "90%",
             padding: "10px",
             fontSize: "16px",
             margin: "10px 0",

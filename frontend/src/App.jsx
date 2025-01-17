@@ -48,8 +48,14 @@ const App = () => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            flexDirection: "column", // Dostosowanie układu do wyświetlenia logo nad ekranem logowania
           }}
         >
+          <img
+            src="slonce.jpg"
+            alt="Logo"
+            style={{ marginBottom: "20px", width: "150px", height: "auto" }}
+          />
           {isRegistering ? (
             <Register
               setIsRegistering={setIsRegistering}

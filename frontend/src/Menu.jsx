@@ -15,8 +15,8 @@ const Menu = ({ setCurrentScreen, handleLogout, setSelectedProject }) => {
     >
       <button
         onClick={() => {
-          setCurrentScreen("projects");
-          setSelectedProject(null);
+          setCurrentScreen("projects"); // Ustawienie ekranu na projekty
+          setSelectedProject(null); // Resetowanie wybranego projektu
         }}
         style={{
           padding: "15px",
@@ -31,7 +31,7 @@ const Menu = ({ setCurrentScreen, handleLogout, setSelectedProject }) => {
         Lista projektów
       </button>
       <button
-        onClick={() => setCurrentScreen("account")}
+        onClick={() => setCurrentScreen("account")} // Ustawienie ekranu na konto
         style={{
           padding: "15px",
           fontSize: "16px",
@@ -45,7 +45,7 @@ const Menu = ({ setCurrentScreen, handleLogout, setSelectedProject }) => {
         Dane konta
       </button>
       <button
-        onClick={handleLogout}
+        onClick={handleLogout} // Obsługa wylogowania
         style={{
           padding: "15px",
           fontSize: "16px",

@@ -8,24 +8,25 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Pobieranie danych projektów z API
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/projects/", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch projects");
-        }
-        const data = await response.json();
-        setProjects(data); // Przechowywanie pełnych danych projektów
-      } catch (error) {
-        console.error("Error fetching projects:", error);
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/projects/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch projects");
       }
-    };
+      const data = await response.json();
+      setProjects(data); // Przechowywanie pełnych danych projektów
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
+  // Fetch projects initially when the component mounts
+  useEffect(() => {
     fetchProjects();
   }, []);
 
@@ -35,6 +36,8 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
 
   const handleAddGroup = async () => {
     // Funkcjonalność dodawania grupy
+    // After adding, refresh the list of projects
+    fetchProjects(); // Re-fetch projects
   };
 
   // Filtrowanie projektów według wyszukiwania
@@ -49,6 +52,7 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
         <Canvas
           projectDescription={selectedProject.description}
           projectId={selectedProject.id}
+          projectTitle={selectedProject.ti}
         />
       </div>
     );
@@ -141,7 +145,7 @@ const ProjectsScreen = ({ selectedProject, setSelectedProject }) => {
       <AddGroupModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddGroup={handleAddGroup}
+        onAddGroup={handleAddGroup} // Pass handleAddGroup to refresh project list
       />
     </div>
   );

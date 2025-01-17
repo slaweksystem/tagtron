@@ -4,13 +4,34 @@ const Header = ({ loggedInUser }) => {
   return (
     <header
       style={{
-        textAlign: "right",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
         padding: "10px 20px",
         backgroundColor: "#f8f9fa",
         borderBottom: "1px solid #ddd",
       }}
     >
-      <span style={{ fontSize: "14px", color: "#555" }}>
+      <div style={{ flex: 1 }}></div>
+
+      <img
+        src="slonce.jpg" // Ścieżka do pliku slonce.jpg
+        alt="Logo"
+        style={{
+          width: "50px",
+          height: "50px",
+          borderRadius: "50%",
+        }}
+      />
+
+      <span
+        style={{
+          flex: 1,
+          textAlign: "right",
+          fontSize: "14px",
+          color: "#555",
+        }}
+      >
         Zalogowany jako: {loggedInUser}
       </span>
     </header>
