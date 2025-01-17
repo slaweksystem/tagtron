@@ -6,12 +6,12 @@
 ## Strona rejestracji
 Poniżej znajduje się podgląd strony rejestracji:
 
-![Strona rejestracji](../media/strona-rejestracji.png)
+![Strona rejestracji](media/strona_rejestracji.png)
 
 ## Strona logowania
 Poniżej znajduje się podgląd strony logowania:
 
-![Strona logowania](../media/strona-logowania.png)
+![Strona logowania](media/strona_logowania.png)
 
 ## Struktura Plików w Folderze `src`
 Folder `src` zawiera komponenty React oraz inne elementy wspierające frontend aplikacji. Poniżej opis najważniejszych plików i komponentów:
