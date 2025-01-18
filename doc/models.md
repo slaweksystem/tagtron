@@ -11,11 +11,11 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from database import Base
 
-    Column, Integer, String, ForeignKey, Table: Funkcje i klasy z SQLAlchemy służące do definiowania kolumn tabeli oraz ich typów.
-    relationship: Funkcja umożliwiająca definiowanie relacji pomiędzy tabelami.
-    Base: Bazowa klasa deklaratywna dla modeli, zdefiniowana w module database.
+Column, Integer, String, ForeignKey, Table: Funkcje i klasy z SQLAlchemy służące do definiowania kolumn tabeli oraz ich typów.
+relationship: Funkcja umożliwiająca definiowanie relacji pomiędzy tabelami.
+Base: Bazowa klasa deklaratywna dla modeli, zdefiniowana w module database.
 
-Tabela Asocjacyjna image_tags
+## Tabela Asocjacyjna image_tags
 
 Aby zrealizować relację wiele-do-wielu pomiędzy obrazami a etykietami, definiujemy tabelę asocjacyjną image_tags:
 
@@ -29,7 +29,7 @@ image_tags = Table(
     image_id: Identyfikator obrazu, klucz obcy do tabeli images.
     tag_id: Identyfikator etykiety, klucz obcy do tabeli tags.
 
-Klasa User
+## Klasa User
 
 Model User reprezentuje użytkowników aplikacji.
 
@@ -48,7 +48,7 @@ class User(Base):
     hashed_password: Zahaszowane hasło użytkownika.
     projects: Relacja jeden-do-wielu z modelem Project, wskazująca na projekty utworzone przez użytkownika.
 
-Klasa Project
+## Klasa Project
 
 Model Project reprezentuje projekty tworzone przez użytkowników.
 
@@ -69,7 +69,7 @@ class Project(Base):
     owner: Relacja wiele-do-jednego z modelem User, wskazująca na właściciela projektu.
     images: Relacja jeden-do-wielu z modelem Image, wskazująca na obrazy należące do projektu.
 
-Klasa Image
+## Klasa Image
 
 Model Image reprezentuje obrazy dodawane do projektów.
 
@@ -88,7 +88,7 @@ class Image(Base):
     project: Relacja wiele-do-jednego z modelem Project, wskazująca na projekt, do którego należy obraz.
     tags: Relacja wiele-do-wielu z modelem Tag, wskazująca na etykiety przypisane do obrazu.
 
-Klasa Tag
+## Klasa Tag
 
 Model Tag reprezentuje etykiety przypisywane do obrazów.
 
@@ -103,7 +103,7 @@ class Tag(Base):
     name: Nazwa etykiety, unikalna w systemie.
     images: Relacja wiele-do-wielu z modelem Image, wskazująca na obrazy oznaczone daną etykietą.
 
-Schemat Bazy Danych
+## Schemat Bazy Danych
 
 Poniżej przedstawiono schemat bazy danych, ilustrujący relacje pomiędzy tabelami:
 
