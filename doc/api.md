@@ -29,7 +29,7 @@ Endpointy związane z autoryzacją użytkowników.
   }
 
     Odpowiedź:
-
+```json
     {
       "id": "integer",
       "username": "string",
@@ -45,14 +45,14 @@ Logowanie Użytkownika
     Opis: Uwierzytelnia użytkownika i zwraca token dostępu.
 
     Body:
-
+```json
 {
   "username": "string",
   "password": "string"
 }
 
 Odpowiedź:
-
+```json
     {
       "access_token": "string",
       "token_type": "bearer"
@@ -73,7 +73,7 @@ Pobierz Informacje o Użytkowniku
         user_id (integer): ID użytkownika.
 
     Odpowiedź:
-
+```json
     {
       "id": "integer",
       "username": "string",
@@ -99,14 +99,14 @@ Utwórz Nowy Projekt
     Opis: Tworzy nowy projekt dla zalogowanego użytkownika.
 
     Body:
-
+```json
 {
   "title": "string",
   "description": "string"
 }
 
 Odpowiedź:
-
+```json
     {
       "id": "integer",
       "title": "string",
@@ -123,7 +123,7 @@ Pobierz Listę Projektów
     Opis: Zwraca listę wszystkich projektów zalogowanego użytkownika.
 
     Odpowiedź:
-
+```json
     [
       {
         "id": "integer",
@@ -145,7 +145,7 @@ Pobierz Szczegóły Projektu
         project_id (integer): ID projektu.
 
     Odpowiedź:
-
+```json
     {
       "id": "integer",
       "title": "string",
@@ -174,13 +174,13 @@ Dodaj Obraz do Projektu
         project_id (integer): ID projektu.
 
     Body:
-
+```json
 {
   "filename": "string"
 }
 
 Odpowiedź:
-
+```json
     {
       "id": "integer",
       "filename": "string",
@@ -199,7 +199,7 @@ Pobierz Listę Obrazów w Projekcie
         project_id (integer): ID projektu.
 
     Odpowiedź:
-
+```json
 [
   {
     "id": "integer",
