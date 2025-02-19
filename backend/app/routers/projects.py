@@ -58,24 +58,40 @@ class UserProjectRequestEmail(BaseModel):
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def read_all(
+    user: user_dependency,
+    db: db_dependency,
     offset: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1),
-    db: Session = Depends(get_db)
+    limit: int = Query(10, ge=1)
 ):
     """
     Read all projects with pagination.
     - `offset`: Number of items to skip (default: 0)
     - `limit`: Maximum number of items to return (default: 10)
     """
-    projects = db.query(Projects).offset(offset).limit(limit).all()
-    return projects
 
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    
+    # Check if user is an Admin
+    admin_role = db.query(ProjectRoles).filter(ProjectRoles.name == "Admin").first()
+    user_projects_query = db.query(ProjectUsers).filter(ProjectUsers.user_id == user["id"])
+
+    if admin_role and user.role_id == admin_role.id:
+        # Admin can view all projects
+        projects = db.query(Projects).offset(offset).limit(limit).all()
+    else:
+        # Regular users can only see assigned projects
+        assigned_project_ids = user_projects_query.with_entities(ProjectUsers.project_id).all()
+        projects = db.query(Projects).filter(Projects.id.in_([p[0] for p in assigned_project_ids])).offset(offset).limit(limit).all()
+
+    return projects
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_project(user: user_dependency,
                          db: db_dependency, 
                          project_request: ProjectRequest):
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
+    
     project = Projects(**project_request.model_dump(), owner_id=user.get('id'))
 
     db.add(project)
@@ -85,7 +101,8 @@ async def create_project(user: user_dependency,
 
 # Delete a project
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project(project_id: int, db: Session = Depends(get_db)):
+async def delete_project(project_id: int, 
+                         db: Session = Depends(get_db)):
     project = db.query(Projects).filter(Projects.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -101,7 +118,7 @@ async def get_users(user: user_dependency,
     # Ensure user is authenticated
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
-    
+
      # Check if the user is assigned to the project
     is_assigned = (
         db.query(ProjectUsers)
@@ -159,22 +176,6 @@ async def add_user(user: user_dependency,
     db.add(project_user)
     db.commit()
     return {"id": project_user.id, "message": "User added to project"}
-
-# Add a user to a project
-@router.post("/users", status_code=status.HTTP_201_CREATED)
-async def add_user(user: user_dependency,
-                         db: db_dependency, request: UserProjectRequest):
-    if user is None:
-        raise HTTPException(status_code=401, detail='Authentication Failed')
-    
-    project_user = ProjectUsers(
-    project_id=request.project_id,
-    user_id=request.user_id
-    )
-    
-    db.add(project_user)
-    db.commit()
-    return {"message": "User added to project"}
 
 @router.delete("/users/delete_id/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user: user_dependency,
