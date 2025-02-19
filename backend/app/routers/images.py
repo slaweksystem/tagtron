@@ -243,3 +243,24 @@ async def delete_label(user: user_dependency, db: db_dependency,
     db.commit()
     
     return {"message": "Label deleted successfully"}
+
+@router.get("/unlabeled-image/{project_id}", status_code=status.HTTP_200_OK)
+async def get_unlabeled_image(
+    project_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the ID of an unlabeled image for a given project.
+    Checks if the user is an admin or assigned to the project.
+    """
+    if not is_admin_or_project_member(user, db, project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
+    
+    unlabeled_image = db.query(Images).outerjoin(Labels, Images.id == Labels.image_id)
+    unlabeled_image = unlabeled_image.filter(Images.project_id == project_id, Labels.id == None).first()
+    
+    if not unlabeled_image:
+        raise HTTPException(status_code=404, detail="No unlabeled images found for this project")
+    
+    return {"image_id": unlabeled_image.id}
