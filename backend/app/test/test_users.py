@@ -1,4 +1,3 @@
-import pytest
 from .utils import client, override_get_db, override_get_current_user
 from .utils import *
 from ..routers.users import get_db, get_current_user
@@ -36,7 +35,7 @@ def test_change_password_success():
                 "email": "johnnybravotestchange@example.com",
                 "first_name": "Johnny",
                 "last_name": "Bravo",
-                "password": "1ubiepl@cki", 
+                "password": "1ubiepl@cki",
               }
     # Add User
     response = client.post("/auth/", json = payload)

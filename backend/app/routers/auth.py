@@ -93,6 +93,16 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency,
                       create_user_request: CreateUserRequest):
+    
+    # Check if user exists
+    existing_user = db.query(Users).filter(
+        (Users.username == create_user_request.username) |
+        (Users.email == create_user_request.email)
+    ).first()
+
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username or email already exists")
+    
     # fetch default role
     role_id = db.query(Roles).filter(Roles.name == "User").first().id
 

@@ -1,5 +1,4 @@
 *.pyc
 .pyenv
-backend/app/todosapp.db
+*.db
 backend/app/fastapienv/*
-backend/*.db

@@ -5,7 +5,7 @@ from .models import Base
 
 from .database import engine
 from .database_init import init_db
-from .routers import auth, projects, users, images
+from .routers import auth, admin, projects, users, images
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
@@ -31,6 +31,7 @@ Base.metadata.create_all(bind=engine)
 
 # Routers
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(users.router)
 app.include_router(projects.router)
 app.include_router(images.router)
