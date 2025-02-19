@@ -18,6 +18,7 @@ from ..models import Projects
 from ..models import ProjectUsers
 from ..models import Images
 from ..models import Labels
+from ..models import Users
 from ..database import engine, SessionLocal
 from .auth import get_current_user
 from ..routers import auth
@@ -57,7 +58,8 @@ def is_admin_or_project_member(user: user_dependency,
     Check if the user is an admin or a member of the project.
     """
     admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
-    is_admin = admin_role and user["role_id"] == admin_role.id
+    user_data : Users = db.query(Users).filter(Users.id == user["id"]).first()
+    is_admin = admin_role and user_data.role_id == admin_role.id
 
     is_project_member = db.query(ProjectUsers).filter(
         ProjectUsers.project_id == project_id,
