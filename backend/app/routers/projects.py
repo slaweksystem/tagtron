@@ -72,11 +72,16 @@ async def read_all(
     if user is None:
         raise HTTPException(status_code=401, detail='Authentication Failed')
     
+    user_data : Users = db.query(Users).filter(Users.id == user["id"]).first()
+    
     # Check if user is an Admin
-    admin_role = db.query(ProjectRoles).filter(ProjectRoles.name == "Admin").first()
+    admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
     user_projects_query = db.query(ProjectUsers).filter(ProjectUsers.user_id == user["id"])
 
-    if admin_role and user.role_id == admin_role.id:
+    print("debug:",admin_role.id)
+    print("debug:",user_data.role_id)
+
+    if admin_role and user_data.role_id == admin_role.id:
         # Admin can view all projects
         projects = db.query(Projects).offset(offset).limit(limit).all()
     else:

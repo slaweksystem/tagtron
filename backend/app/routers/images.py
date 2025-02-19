@@ -13,7 +13,9 @@ from PIL import Image
 
 
 from ..models import Base
+from ..models import Roles
 from ..models import Projects
+from ..models import ProjectUsers
 from ..models import Images
 from ..models import Labels
 from ..database import engine, SessionLocal
@@ -48,8 +50,28 @@ class LabelRequest(BaseModel):
     position_x2 : int
     position_y2 : int
 
+def is_admin_or_project_member(user: user_dependency,
+                               db: db_dependency,
+                               project_id):
+    """
+    Check if the user is an admin or a member of the project.
+    """
+    admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
+    is_admin = admin_role and user["role_id"] == admin_role.id
+
+    is_project_member = db.query(ProjectUsers).filter(
+        ProjectUsers.project_id == project_id,
+        ProjectUsers.user_id == user["id"]
+    ).first()
+
+    return is_admin or is_project_member
+
 @router.get("/{project_id}", status_code=status.HTTP_200_OK)
 async def read_project_images(user: user_dependency, db: db_dependency, project_id:int = Path(gt=0)):
+
+    if not is_admin_or_project_member(user, db, project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
+
     return db.query(Images).filter(Images.project_id == project_id).all()
 
 @router.post("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -57,6 +79,12 @@ async def add_image(user: user_dependency,
                     db: db_dependency, 
                     file: UploadFile = File(...),
                     project_id:int = Path(gt=0)):
+    
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+    
+    if not is_admin_or_project_member(user, db, project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
     
     # Generate a unique filename using UUID
     unique_filename = f"{uuid.uuid4()}.jpg"
@@ -92,11 +120,17 @@ async def view_image(
     db: db_dependency,
     image_id: int = Path(gt=0)
 ):
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+
     # Pobierz szczegóły obrazu z bazy danych
     image = db.query(Images).filter(Images.id == image_id).first()
 
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
+    
+    if not is_admin_or_project_member(user, db, image.project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
 
     # Ścieżka do pliku
     file_path = OSPath(image.path)
@@ -117,23 +151,95 @@ async def add_mnultiple_images(user: user_dependency, db: db_dependency, project
     pass
 
 @router.get("/labels/{image_id}", status_code=status.HTTP_200_OK)
-async def read_labels(user: user_dependency, db: db_dependency,
-                              image_id:int = Path(gt=0)):
-    return db.query(Labels).filter(Labels.id == image_id).all()
+async def read_labels(user: user_dependency, db: db_dependency, image_id: int = Path(gt=0)):
+    """
+    Retrieve all labels for a given image if the user is an admin or belongs to the project.
+    """
+    image = db.query(Images).filter(Images.id == image_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
 
-@router.post("/labels/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def save_label(user: user_dependency, db: db_dependency,
-                              label_request: LabelRequest,
-                              image_id:int = Path(gt=0),
-                              ):
-    pass
+    if not is_admin_or_project_member(user, db, image.project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to view labels for this project")
 
-@router.put("/labels/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_label(user: user_dependency, db: db_dependency,
-                              label_request: LabelRequest,
-                              image_id:int = Path(gt=0)):
-    pass
+    labels = db.query(Labels).filter(Labels.image_id == image_id).all()
+    return labels
 
-@router.delete("/labels/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_label(user: user_dependency, db: db_dependency, image_id:int = Path(gt=0)):
-    pass
+
+@router.post("/labels/{image_id}", status_code=status.HTTP_201_CREATED)
+async def save_label(user: user_dependency, db: db_dependency, 
+                     label_request: LabelRequest, image_id: int = Path(gt=0)):
+    """
+    Save a new label associated with an image if the user is an admin or belongs to the project.
+    """
+    image = db.query(Images).filter(Images.id == image_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    if not is_admin_or_project_member(user, db, image.project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
+
+    new_label = Labels(
+        image_id=image_id,
+        label=label_request.label,
+        create_time=datetime.utcnow(),
+        position_x1=label_request.position_x1,
+        position_y1=label_request.position_y1,
+        position_x2=label_request.position_x2,
+        position_y2=label_request.position_y2,
+        owner_id=user["id"]
+    )
+
+    db.add(new_label)
+    db.commit()
+    db.refresh(new_label)
+
+    return {"message": "Label created successfully", "label_id": new_label.id}
+
+
+@router.put("/labels/{image_id}/{label_id}", status_code=status.HTTP_200_OK)
+async def update_label(user: user_dependency, db: db_dependency, 
+                       label_request: LabelRequest, 
+                       image_id: int = Path(gt=0),
+                       label_id: int = Path(gt=0)):
+    """
+    Update an existing label for an image if the user is an admin, or the owner of the label.
+    """
+    label = db.query(Labels).filter(Labels.id == label_id, Labels.image_id == image_id).first()
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    if not is_admin_or_project_member(user, db, label.image.project_id) and label.owner_id != user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to update this label")
+
+    label.label = label_request.label
+    label.position_x1 = label_request.position_x1
+    label.position_y1 = label_request.position_y1
+    label.position_x2 = label_request.position_x2
+    label.position_y2 = label_request.position_y2
+    label.create_time = datetime.utcnow()
+
+    db.commit()
+    db.refresh(label)
+
+    return {"message": "Label updated successfully", "label_id": label.id}
+
+
+@router.delete("/labels/{image_id}/{label_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_label(user: user_dependency, db: db_dependency, 
+                       image_id: int = Path(gt=0), 
+                       label_id: int = Path(gt=0)):
+    """
+    Delete a label from an image if the user is an admin, or the owner of the label.
+    """
+    label = db.query(Labels).filter(Labels.id == label_id, Labels.image_id == image_id).first()
+    if not label:
+        raise HTTPException(status_code=404, detail="Label not found")
+
+    if not is_admin_or_project_member(user, db, label.image.project_id) and label.owner_id != user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this label")
+
+    db.delete(label)
+    db.commit()
+    
+    return {"message": "Label deleted successfully"}

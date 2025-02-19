@@ -63,8 +63,8 @@ async def init_db():
     """Initializes the database with default data, like the default role."""
     db = SessionLocal()
     # Add role
-    add_role(db, "User")
     add_role(db, "Admin")
+    add_role(db, "User")
     add_project_role(db, "Owner")
     add_project_role(db, "User")
     add_project_role(db, "Modder")
