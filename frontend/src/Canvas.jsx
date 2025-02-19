@@ -15,6 +15,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
   const [users, setUsers] = useState([]); // Lista użytkowników projektu
   const [showImageUploadModal, setShowImageUploadModal] = useState(false); // Stan do wyświetlania modala
   const [showUserAddModal, setShowUserAddModal] = useState(false);
+  const [labels, setLabels] = useState([]); // Lista etykiet
 
   const canvasRef = useRef(null);
 
@@ -23,6 +24,45 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     handleGetUsers();
     handleGetImages();
   }, []);
+
+  const fetchLabels = async (imageId) => {
+    //if (!images || images.length == 0 || !images[currentImageIndex]) {
+    //console.warn("Brak dostępnych obrazów, nie można pobrać etykiet.");
+    //return; // Jeśli brak obrazów, nie pobieraj etykiet
+    //}
+
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      }
+      const response = await fetch(
+        `http://localhost:8000/images/labels/${imageId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Błąd: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data)) {
+        setLabels(data); // Aktualizacja stanu etykiet
+      } else {
+        console.warn("Otrzymano niepoprawne dane dla etykiet.");
+        setLabels([]); // Jeśli dane są nieprawidłowe, czyścimy etykiety
+      }
+    } catch (error) {
+      console.error("Błąd podczas pobierania etykiet:", error);
+      setLabels([]); // Jeśli błąd, czyścimy etykiety
+    }
+  };
 
   // Pobieranie użytkowników projektu
   const handleGetUsers = async () => {
@@ -79,11 +119,11 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       }
 
       const data = await response.json();
-      console.log("Odpowiedź serwera:", data);
 
       if (data && Array.isArray(data) && data.length > 0) {
         setImages(data);
         loadImage(data[0].id); // Załaduj pierwszy obraz
+        fetchLabels(data[0].id);
       } else {
         throw new Error("Brak dostępnych obrazów.");
       }
@@ -128,8 +168,9 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
   // Obsługa rysowania prostokątków
   const handleMouseDown = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+
     setStartPos({ x, y });
     setDrawing(true);
   };
@@ -138,15 +179,16 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!drawing) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
 
-    setEndPos({ x, y }); // Zapisywanie końcowej pozycji
+    setEndPos({ x, y });
+
     setRectangle({
-      x: startPos.x,
-      y: startPos.y,
-      width: x - startPos.x,
-      height: y - startPos.y,
+      x: Math.min(startPos.x, x),
+      y: Math.min(startPos.y, y),
+      width: Math.abs(x - startPos.x),
+      height: Math.abs(y - startPos.y),
     });
 
     setDrawing(false);
@@ -156,8 +198,8 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!drawing) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
 
     setRectangle({
       x: startPos.x,
@@ -179,6 +221,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!label || !rectangle) {
       alert("Proszę podać etykietę i narysować prostokąt.");
       return;
+      fetchLabels();
     }
 
     // Przygotowanie danych do wysłania, zgodnie z wymaganiami API
@@ -228,6 +271,45 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     }
   };
 
+  //usuwanie labeli
+  const deleteLabel = async (imageId, labelId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      }
+
+      console.log(imageId, labelId);
+      const response = await fetch(
+        `http://localhost:8000/images/labels/${imageId}/${labelId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(labelRequest),
+        }
+      );
+      console.log(fetch);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Błąd usuwania etykiety");
+      }
+
+      console.log("Etykieta usunięta pomyślnie");
+      // Możesz dodać dodatkowe akcje, np. odświeżenie listy etykiet
+      //setRectangle(null); // Usuwamy prostokąt
+      //setLabel(null); // Usuwamy etykietę
+      //setLabelInput(""); // Wyczyść pole tekstowe
+      //alert("Etykieta usunięta pomyślnie!");
+    } catch (error) {
+      console.error("Błąd podczas usuwania etykiety:", error);
+      alert("Wystąpił błąd podczas usuwania etykiety.");
+    }
+  };
+
   // Funkcja do zmiany zdjęć
   const handleChangeImage = (direction) => {
     const newIndex = currentImageIndex + direction;
@@ -236,6 +318,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (newIndex >= 0 && newIndex < images.length) {
       setCurrentImageIndex(newIndex); // Zmiana indeksu
       loadImage(images[newIndex].id); // Załaduj obraz na podstawie nowego indeksu
+      fetchLabels(images[newIndex].id);
     }
   };
 
@@ -293,53 +376,62 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       {/* Ekran do rysowania prostokątków */}
       {imagePath ? (
         <div
-          ref={canvasRef}
           style={{
-            position: "relative",
-            width: "300px",
-            height: "300px",
-            border: "1px solid black",
-            cursor: "crosshair",
-            backgroundImage: `url(${imagePath})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "20px",
           }}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseMove={handleMouseMove}
         >
-          {rectangle && (
-            <div
-              style={{
-                position: "absolute",
-                border: "2px solid red",
-                top: rectangle.y,
-                left: rectangle.x,
-                width: rectangle.width,
-                height: rectangle.height,
-              }}
-            >
-              {/* Wyświetlanie etykiety nad prostokątem */}
-              {label && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: -20, // Nad prostokątem
-                    left: rectangle.width / 2,
-                    transform: "translateX(-50%)",
-                    color: "white",
-                    fontWeight: "bold",
-                    textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)",
-                  }}
-                >
-                  {label}
-                </div>
-              )}
-            </div>
-          )}
+          <div
+            ref={canvasRef}
+            style={{
+              position: "relative",
+              width: "300px",
+              height: "300px",
+              border: "1px solid black",
+              cursor: "crosshair",
+              backgroundImage: `url(${imagePath})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
+            {rectangle && (
+              <div
+                style={{
+                  position: "absolute",
+                  border: "2px solid red",
+                  top: rectangle.y,
+                  left: rectangle.x,
+                  width: rectangle.width,
+                  height: rectangle.height,
+                }}
+              >
+                {/* Wyświetlanie etykiety nad prostokątem */}
+                {label && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -20,
+                      left: rectangle.width / 2,
+                      transform: "translateX(-50%)",
+                      color: "white",
+                      fontWeight: "bold",
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)",
+                    }}
+                  >
+                    {label}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        <p>Brak obrazów w projekcie</p>
+        <p style={{ textAlign: "center" }}>Brak obrazów w projekcie</p>
       )}
 
       {/* Formularz do nadawania etykiety */}
@@ -426,6 +518,88 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
             handleGetUsers(); // Odśwież listę użytkowników
           }}
         />
+      )}
+      {labels.length > 0 && (
+        <div style={{ textAlign: "center", marginTop: "10px" }}>
+          <h3>Etykiety dla aktualnego obrazu:</h3>
+          <table
+            style={{
+              margin: "0 auto",
+              borderCollapse: "collapse",
+              width: "80%",
+            }}
+          >
+            <thead>
+              <tr style={{ backgroundColor: "#f2f2f2" }}>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>
+                  Etykieta
+                </th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>X1</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Y1</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>X2</th>
+                <th style={{ border: "1px solid #ddd", padding: "8px" }}>Y2</th>
+              </tr>
+            </thead>
+            <tbody>
+              {labels.map((label) => (
+                <tr key={label.id}>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    {label.label}
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    {label.position_x1}
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    {label.position_y1}
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    {label.position_x2}
+                  </td>
+                  <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+                    {label.position_y2}
+                  </td>
+                  <button
+                    onClick={() =>
+                      setRectangle(
+                        {
+                          x: label.position_x1,
+                          y: label.position_y1,
+                          width: label.position_x2 - label.position_x1,
+                          height: label.position_y2 - label.position_y1,
+                        },
+                        setLabel(label.label),
+                        setLabelInput(label.label)
+                      )
+                    }
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "green",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    rysuj
+                  </button>
+                  <button
+                    onClick={() =>
+                      deleteLabel(images[currentImageIndex].id, label.id)
+                    }
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: "red",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    usun
+                  </button>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
