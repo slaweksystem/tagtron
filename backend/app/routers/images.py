@@ -18,6 +18,7 @@ from ..models import Projects
 from ..models import ProjectUsers
 from ..models import Images
 from ..models import Labels
+from ..models import Users
 from ..database import engine, SessionLocal
 from .auth import get_current_user
 from ..routers import auth
@@ -57,7 +58,8 @@ def is_admin_or_project_member(user: user_dependency,
     Check if the user is an admin or a member of the project.
     """
     admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
-    is_admin = admin_role and user["role_id"] == admin_role.id
+    user_data : Users = db.query(Users).filter(Users.id == user["id"]).first()
+    is_admin = admin_role and user_data.role_id == admin_role.id
 
     is_project_member = db.query(ProjectUsers).filter(
         ProjectUsers.project_id == project_id,
@@ -243,3 +245,24 @@ async def delete_label(user: user_dependency, db: db_dependency,
     db.commit()
     
     return {"message": "Label deleted successfully"}
+
+@router.get("/unlabeled-image/{project_id}", status_code=status.HTTP_200_OK)
+async def get_unlabeled_image(
+    project_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the ID of an unlabeled image for a given project.
+    Checks if the user is an admin or assigned to the project.
+    """
+    if not is_admin_or_project_member(user, db, project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to add labels to this project")
+    
+    unlabeled_image = db.query(Images).outerjoin(Labels, Images.id == Labels.image_id)
+    unlabeled_image = unlabeled_image.filter(Images.project_id == project_id, Labels.id == None).first()
+    
+    if not unlabeled_image:
+        raise HTTPException(status_code=404, detail="No unlabeled images found for this project")
+    
+    return {"image_id": unlabeled_image.id}

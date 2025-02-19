@@ -16,6 +16,11 @@ Strona służy do oznaczania obrazków (labelowania). Użytkownicy mogą tworzy�
 - Dodawać etykiety do obrazów
 - Zarządzać projektami i danymi
 
+## Documentacja:
+
+Dokumentacja Frontendu wykonanego przy użuciu biblioteki `React` znajduje sie w pliku [frontend.md]('doc/frontend.md')
+Dokumentacja Backendu wykonanego w FastAPI znajduje się w plikui [backend.md](doc/backend.md)
+
 ## Uruchomienie aplikacji
 
 Aby uruchomić aplikację przy użyciu Docker Compose, należy skonfigurować zmienne środowiskowe:
@@ -29,7 +34,7 @@ $PG_DATABASE
 Możesz także użyć pliku `.env` z komendą, na przykład:
 
 ```bash
-docker compose up --env-file .env
+docker compose --env-file config/.env.dev up -d
 ```
 
 ## Funkcjonalności
@@ -51,7 +56,7 @@ docker compose up --env-file .env
    cd tagtron
    ```
 2. Skonfiguruj środowisko:
-   - Utwórz plik `.env` na podstawie pliku `.env.example` i ustaw odpowiednie zmienne środowiskowe.
+   - Utwórz plik `.env` na podstawie pliku `.env.dev` i ustaw odpowiednie zmienne środowiskowe.
 3. Uruchom aplikację:
    ```bash
    docker compose up
