@@ -37,7 +37,19 @@ async def get_user(user: user_dependency, db: db_dependency):
 
     user_info = db.query(Users).filter(Users.id == user.get('id')).first()
     user_info.role = db.query(Roles).filter(Roles.id == user_info.role_id).first().name
-    return user_info
+
+    user_response = {
+        "last_name" : user_info.last_name,
+        "id" : user_info.id,
+        "username" : user_info.username,
+        "is_active" : user_info.is_active,
+        "first_name" : user_info.first_name,
+        "email" : user_info.email,
+        "role_id" : user_info.role_id,
+        "role" : user_info.role,
+    }
+
+    return user_response
 
 @router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
 async def update_password(user: user_dependency,
