@@ -262,7 +262,6 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       setRectangle(null); // Usuwamy prostokąt
       setLabel(null); // Usuwamy etykietę
       setLabelInput(""); // Wyczyść pole tekstowe
-      console.log("TEST:", images[currentImageIndex].id);
       fetchLabels(images[currentImageIndex].id);
       alert("Etykieta zapisana pomyślnie!");
     } catch (error) {
@@ -490,6 +489,19 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
           }}
         >
           Następne
+        </button>
+        <span style={{ margin: "0 10px" }}></span>
+        <button
+          onClick={() => handleChangeImage(1)}
+          style={{
+            padding: "5px 10px",
+            backgroundColor: "#FF5722",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+          }}
+        >
+          Idź do bez labela
         </button>
       </div>
 
