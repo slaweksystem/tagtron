@@ -221,7 +221,6 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!label || !rectangle) {
       alert("Proszę podać etykietę i narysować prostokąt.");
       return;
-      fetchLabels();
     }
 
     // Przygotowanie danych do wysłania, zgodnie z wymaganiami API
@@ -263,7 +262,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       setRectangle(null); // Usuwamy prostokąt
       setLabel(null); // Usuwamy etykietę
       setLabelInput(""); // Wyczyść pole tekstowe
-
+      fetchLabels(images[currentImageIndex].id);
       alert("Etykieta zapisana pomyślnie!");
     } catch (error) {
       console.error("Błąd podczas zapisywania etykiety:", error);
@@ -280,30 +279,26 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
         throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
       }
 
-      console.log(imageId, labelId);
       const response = await fetch(
         `http://localhost:8000/images/labels/${imageId}/${labelId}`,
         {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(labelRequest),
         }
       );
-      console.log(fetch);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Błąd usuwania etykiety");
       }
 
       console.log("Etykieta usunięta pomyślnie");
-      // Możesz dodać dodatkowe akcje, np. odświeżenie listy etykiet
-      //setRectangle(null); // Usuwamy prostokąt
-      //setLabel(null); // Usuwamy etykietę
-      //setLabelInput(""); // Wyczyść pole tekstowe
-      //alert("Etykieta usunięta pomyślnie!");
+      fetchLabels(images[currentImageIndex].id);
+
+      setRectangle(null); // Usuwamy prostokąt
+      setLabel(null); // Usuwamy etykietę
+      setLabelInput(""); // Wyczyść pole tekstowe
     } catch (error) {
       console.error("Błąd podczas usuwania etykiety:", error);
       alert("Wystąpił błąd podczas usuwania etykiety.");
@@ -490,6 +485,19 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
           }}
         >
           Następne
+        </button>
+        <span style={{ margin: "0 10px" }}></span>
+        <button
+          onClick={() => handleChangeImage(1)}
+          style={{
+            padding: "5px 10px",
+            backgroundColor: "#FF5722",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+          }}
+        >
+          Idź do bez labela
         </button>
       </div>
 
