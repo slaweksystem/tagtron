@@ -144,8 +144,9 @@ async def get_users(user: user_dependency,
     
     # Fetch users assigned to the project
     project_users = (
-        db.query(ProjectUsers, Users)
+        db.query(ProjectUsers, Users, ProjectRoles.name)
         .join(Users, ProjectUsers.user_id == Users.id)
+        .join(ProjectRoles, ProjectUsers.role_id == ProjectRoles.id)
         .filter(ProjectUsers.project_id == project_id)
         .all()
     )
@@ -158,8 +159,9 @@ async def get_users(user: user_dependency,
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role_id": project_user.role_id,
+            "role": role_name,
         }
-        for project_user, user in project_users
+        for project_user, user, role_name in project_users
     ]
 
     return JSONResponse(
