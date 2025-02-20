@@ -16,7 +16,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
   const [showImageUploadModal, setShowImageUploadModal] = useState(false); // Stan do wyświetlania modala
   const [showUserAddModal, setShowUserAddModal] = useState(false);
   const [labels, setLabels] = useState([]); // Lista etykiet
-
+  const [role, setRole] = useState([]);
   const canvasRef = useRef(null);
 
   // Załaduj użytkowników i obrazy po załadowaniu komponentu
@@ -85,7 +85,6 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
 
       const data = await response.json();
       setUsers(data.users);
-      console.log(data);
     } catch (error) {
       console.error("Błąd podczas pobierania użytkowników:", error);
       alert("Wystąpił błąd podczas pobierania użytkowników.");
@@ -348,6 +347,37 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     }
   };
 
+  //usuwanie uzytkownikow
+  const handleDeleteUser = async (userId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      }
+      const response = await fetch(
+        `http://localhost:8000/projects/users/delete_id/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Błąd usuwania uzytkownika");
+      }
+
+      console.log("Pomyslnie usunieto użytkownika");
+
+      handleGetUsers();
+    } catch (error) {
+      console.error("Błąd podczas usuwania użytkownika:", error);
+      alert("Wystąpił błąd podczas usuwania użytkownika.");
+    }
+  };
+
   // Funkcja do zmiany zdjęć
   const handleChangeImage = (direction) => {
     const newIndex = currentImageIndex + direction;
@@ -357,6 +387,37 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       setCurrentImageIndex(newIndex); // Zmiana indeksu
       loadImage(images[newIndex].id); // Załaduj obraz na podstawie nowego indeksu
       fetchLabels(images[newIndex].id);
+    }
+  };
+
+  // Sprawdzanie roli
+  const checkRole = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      }
+
+      const response = await fetch(
+        `http://localhost:8000/projects/check_role/${projectId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Błąd: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRole(data.role);
+    } catch (error) {
+      console.error("Błąd podczas ładowania obrazu:", error);
+      alert("Wystąpił błąd podczas ładowania obrazu.");
     }
   };
 
@@ -373,18 +434,21 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
               <span>
                 {user.first_name} {user.last_name} ({user.email}) {user.role}
               </span>
-              <button
-                onClick={() => console.log("usuwam:", user.email)}
-                style={{
-                  padding: "5px 10px",
-                  backgroundColor: "red",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                }}
-              >
-                usun
-              </button>
+              {(role === "Owner" || role === "Modder") && (
+                <button
+                  onClick={() => handleDeleteUser(user.project_user_id)}
+                  style={{
+                    padding: "5px 10px",
+                    backgroundColor: "red",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Usuń
+                </button>
+              )}
             </li>
           ))}
         </ul>
