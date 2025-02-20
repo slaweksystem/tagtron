@@ -8,7 +8,7 @@ from ..models import Base
 from ..models import Users, Roles
 from ..database import get_db
 from .auth import get_current_user
-from ..database import engine, SessionLocal
+from ..database import engine
 
 router = APIRouter(
     prefix="/admin",
@@ -24,7 +24,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class ResetPasswordRequest(BaseModel):
-    user_id: int
+    username: str
     new_password: str
 
 def is_admin(user: Users, db: Session):
@@ -46,7 +46,7 @@ async def reset_password(
     if not is_admin(user_data, db):
         raise HTTPException(status_code=403, detail="Only admins can reset passwords")
 
-    user_to_update = db.query(Users).filter(Users.id == request.user_id).first()
+    user_to_update = db.query(Users).filter(Users.username == request.username).first()
 
     if not user_to_update:
         raise HTTPException(status_code=404, detail="User not found")

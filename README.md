@@ -19,7 +19,7 @@ Strona służy do oznaczania obrazków (labelowania). Użytkownicy mogą tworzy�
 ## Documentacja:
 
 Dokumentacja Frontendu wykonanego przy użuciu biblioteki `React` znajduje sie w pliku [frontend.md]('doc/frontend.md')
-Dokumentacja Backendu wykonanego w FastAPI znajduje się w plikui [backend.md](doc/backend.md)
+Dokumentacja Backendu wykonanego w FastAPI znajduje się w pliku [backend.md](doc/backend.md)
 
 ## Uruchomienie aplikacji
 
