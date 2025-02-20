@@ -85,6 +85,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
 
       const data = await response.json();
       setUsers(data.users);
+      console.log(data);
     } catch (error) {
       console.error("Błąd podczas pobierania użytkowników:", error);
       alert("Wystąpił błąd podczas pobierania użytkowników.");
@@ -370,7 +371,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
               style={{ display: "flex", alignItems: "center", gap: "10px" }}
             >
               <span>
-                {user.first_name} {user.last_name} ({user.email})
+                {user.first_name} {user.last_name} ({user.email}) {user.role}
               </span>
               <button
                 onClick={() => console.log("usuwam:", user.email)}
