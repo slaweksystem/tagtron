@@ -221,7 +221,6 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!label || !rectangle) {
       alert("Proszę podać etykietę i narysować prostokąt.");
       return;
-      fetchLabels();
     }
 
     // Przygotowanie danych do wysłania, zgodnie z wymaganiami API
@@ -263,7 +262,8 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       setRectangle(null); // Usuwamy prostokąt
       setLabel(null); // Usuwamy etykietę
       setLabelInput(""); // Wyczyść pole tekstowe
-
+      console.log("TEST:", images[currentImageIndex].id);
+      fetchLabels(images[currentImageIndex].id);
       alert("Etykieta zapisana pomyślnie!");
     } catch (error) {
       console.error("Błąd podczas zapisywania etykiety:", error);
