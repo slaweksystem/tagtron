@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 from sqlalchemy.orm import Session
 
 from passlib.context import CryptContext

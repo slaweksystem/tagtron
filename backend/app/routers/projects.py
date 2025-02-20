@@ -2,10 +2,7 @@ from typing import Annotated
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from fastapi import Depends, HTTPException, status, Path , Query, status
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import Page, paginate
+from fastapi import Depends, HTTPException, status, Path , Query
 from ..models import Base, ProjectRoles, Roles
 from ..models import Projects
 from ..models import ProjectUsers
