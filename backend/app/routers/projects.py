@@ -264,3 +264,39 @@ async def add_user_email(user: user_dependency,
         return {"message": "User added"}
 
     raise HTTPException(status_code=401, detail = 'Unauthorized :(')
+
+@router.get("/check_role/{project_id}", status_code=status.HTTP_200_OK)
+async def get_role(user: user_dependency,
+                    db: db_dependency,
+                    project_id: int = Path(gt=0)):
+    
+    # Ensure user is authenticated
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+
+     # Check if the user is assigned to the project
+    is_assigned = (
+        db.query(ProjectUsers)
+        .filter(ProjectUsers.project_id == project_id, ProjectUsers.user_id == user['id'])
+        .first()
+    )
+
+    is_owner = (
+        db.query(Projects.id == project_id, Projects.owner_id == user['id'])
+    )
+
+    is_admin = (
+        db.query(Users.id == user['id'], Users.role_id == 2)
+                )
+
+    if not is_assigned and not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="You are not allowed to view this project")
+    
+    # Fetch users assigned to the project
+    user_role_id = db.query(ProjectUsers).filter(ProjectUsers.user_id == user['id']).first().role_id
+    project_role = (db.query(ProjectRoles).filter(ProjectRoles.id == user_role_id).first()).name
+
+
+    return JSONResponse(
+        content={"role": project_role, "message": ""}, status_code=200
+    )
