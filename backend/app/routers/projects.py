@@ -160,6 +160,7 @@ async def get_users(user: user_dependency,
             "last_name": user.last_name,
             "role_id": project_user.role_id,
             "role": role_name,
+            "project_user_id": project_user.id,
         }
         for project_user, user, role_name in project_users
     ]
