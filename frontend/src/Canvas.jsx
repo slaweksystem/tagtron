@@ -279,30 +279,26 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
         throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
       }
 
-      console.log(imageId, labelId);
       const response = await fetch(
         `http://localhost:8000/images/labels/${imageId}/${labelId}`,
         {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(labelRequest),
         }
       );
-      console.log(fetch);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Błąd usuwania etykiety");
       }
 
       console.log("Etykieta usunięta pomyślnie");
-      // Możesz dodać dodatkowe akcje, np. odświeżenie listy etykiet
-      //setRectangle(null); // Usuwamy prostokąt
-      //setLabel(null); // Usuwamy etykietę
-      //setLabelInput(""); // Wyczyść pole tekstowe
-      //alert("Etykieta usunięta pomyślnie!");
+      fetchLabels(images[currentImageIndex].id);
+
+      setRectangle(null); // Usuwamy prostokąt
+      setLabel(null); // Usuwamy etykietę
+      setLabelInput(""); // Wyczyść pole tekstowe
     } catch (error) {
       console.error("Błąd podczas usuwania etykiety:", error);
       alert("Wystąpił błąd podczas usuwania etykiety.");
