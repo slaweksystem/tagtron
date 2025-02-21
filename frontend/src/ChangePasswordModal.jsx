@@ -8,15 +8,14 @@ const ChangePasswordModal = ({ onClose }) => {
 
     const token = localStorage.getItem("access_token");
 
-    // Log the correct variable name
-
     if (!token) {
       alert("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
-      return; // Exit early if no token
+      return;
     }
 
     try {
-      const response = await fetch("http://localhost:8000/auth", {
+      const response = await fetch("http://localhost:8000/auth/", {
+        // Poprawiony endpoint
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -24,14 +23,24 @@ const ChangePasswordModal = ({ onClose }) => {
         },
         body: JSON.stringify({ username: loggedInUser, password: password }),
       });
+
       if (response.ok) {
         alert("Hasło zostało zmienione.");
         onClose();
       } else {
         const errorData = await response.json();
-        alert(
-          `Błąd: ${errorData.message || "Błędne hasło, Spróbuj ponownie."}`
-        );
+
+        // Obsługa błędu zgodnie ze specyfikacją (422)
+        if (response.status === 422 && errorData.detail) {
+          const errorMsg = errorData.detail
+            .map((err) => `${err.loc.join(" -> ")}: ${err.msg}`)
+            .join("\n");
+          alert(`Błąd walidacji:\n${errorMsg}`);
+        } else {
+          alert(
+            `Błąd: ${errorData.message || "Błędne hasło, Spróbuj ponownie."}`
+          );
+        }
       }
     } catch (error) {
       console.error("Error:", error);
