@@ -12,7 +12,6 @@ Ta dokumentacja zawiera wszelkie informacje na temat wykorzystania FastAPI w bac
 6. [Przykłady Użycia API](#przykłady-użycia-api)
 7. [Obsługa Błędów](#obsługa-błędów)
 8. [Bezpieczeństwo](#bezpieczeństwo)
-9. [Wymagania Systemowe](#wymagania-systemowe)
 
 ## Instalacja i Uruchomienie
 
@@ -215,7 +214,8 @@ POSTGRES_HOST="postgresql-tagtron-db"
 
 Aplikacja udostępnia interaktywną dokumentację API pod adresem <http://localhost:8000/docs>, gdzie można testować endpointy bezpośrednio z przeglądarki.
 
-Obsługa Błędów
+## Obsługa Błędów
+
 W przypadku błędów aplikacja zwraca odpowiedzi z kodami statusu HTTP oraz szczegółowymi informacjami o błędzie.
 
 Przykład odpowiedzi w przypadku błędu:
