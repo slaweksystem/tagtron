@@ -134,6 +134,8 @@ frontend/
 
 ![DodanyObraz](media/DodanyObraz.png)
 
+![Labelowanie](media/Labelowanie.PNG)
+
 ### 12. `UserAddModal.jsx`
 
 - **Cel:** Modal do dodawania nowych użytkowników.
