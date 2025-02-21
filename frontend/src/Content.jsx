@@ -1,6 +1,7 @@
 import React from "react";
 import ProjectsScreen from "./ProjectsScreen";
 import AccountScreen from "./AccountScreen";
+import AdminPanel from "./AdminPanel";
 
 const Content = ({
   currentScreen,
@@ -20,6 +21,8 @@ const Content = ({
       return <AccountScreen loggedInUser={loggedInUser} />;
     case "logout":
       return <p>Wylogowano</p>;
+    case "AdminPanel":
+      return <AdminPanel />;
     default:
       return <p>Wybierz opcję z menu</p>;
   }

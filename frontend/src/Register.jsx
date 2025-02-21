@@ -7,6 +7,7 @@ const Register = ({ setIsRegistering }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
@@ -20,41 +21,46 @@ const Register = ({ setIsRegistering }) => {
     setError(null);
     setSuccess(false);
 
-    if (!validateEmail(email)) {
-      setEmailError("Podaj poprawny adres e-mail.");
-      return;
-    } else {
-      setEmailError("");
-    }
+    let errors = {};
+    if (!email) errors.email = "Email jest wymagany.";
+    else if (!validateEmail(email))
+      errors.email = "Podaj poprawny adres e-mail.";
 
-    if (email && username && password && firstName && lastName) {
-      try {
-        const response = await fetch("http://localhost:8000/auth/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            username,
-            password,
-            first_name: firstName,
-            last_name: lastName,
-          }),
-        });
+    if (!firstName) errors.firstName = "Imię jest wymagane.";
+    if (!lastName) errors.lastName = "Nazwisko jest wymagane.";
+    if (!username) errors.username = "Nazwa użytkownika jest wymagana.";
+    if (!password) errors.password = "Hasło jest wymagane.";
 
-        if (response.ok) {
-          setSuccess(true);
-          setError(null);
-          console.log("Użytkownik zarejestrował się pomyślnie");
-        } else {
-          const errorData = await response.json();
-          setError(errorData.detail || "Registration failed");
-        }
-      } catch (err) {
-        setError("Coś poszło nie tak. Spróbuj ponownie.");
-        console.error(err);
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) return;
+
+    try {
+      const response = await fetch("http://localhost:8000/auth/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      });
+
+      if (response.ok) {
+        setSuccess(true);
+        setError(null);
+        console.log("Użytkownik zarejestrował się pomyślnie");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Registration failed");
       }
+    } catch (err) {
+      setError("Coś poszło nie tak. Spróbuj ponownie.");
+      console.error(err);
     }
   };
 
@@ -73,13 +79,16 @@ const Register = ({ setIsRegistering }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: emailError ? "1px solid red" : "1px solid #ddd",
+            border: fieldErrors.email ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
-        {emailError && (
-          <span style={{ color: "red", fontSize: "12px" }}>{emailError}</span>
+        {fieldErrors.email && (
+          <span style={{ color: "red", fontSize: "12px" }}>
+            {fieldErrors.email}
+          </span>
         )}
+
         <input
           type="text"
           placeholder="Wpisz imię"
@@ -88,10 +97,16 @@ const Register = ({ setIsRegistering }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: "1px solid #ddd",
+            border: fieldErrors.firstName ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
+        {fieldErrors.firstName && (
+          <span style={{ color: "red", fontSize: "12px" }}>
+            {fieldErrors.firstName}
+          </span>
+        )}
+
         <input
           type="text"
           placeholder="Wpisz nazwisko"
@@ -100,10 +115,16 @@ const Register = ({ setIsRegistering }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: "1px solid #ddd",
+            border: fieldErrors.lastName ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
+        {fieldErrors.lastName && (
+          <span style={{ color: "red", fontSize: "12px" }}>
+            {fieldErrors.lastName}
+          </span>
+        )}
+
         <input
           type="text"
           placeholder="Wpisz nazwę użytkownika"
@@ -112,10 +133,16 @@ const Register = ({ setIsRegistering }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: "1px solid #ddd",
+            border: fieldErrors.username ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
+        {fieldErrors.username && (
+          <span style={{ color: "red", fontSize: "12px" }}>
+            {fieldErrors.username}
+          </span>
+        )}
+
         <input
           type="password"
           placeholder="Wpisz hasło"
@@ -124,10 +151,16 @@ const Register = ({ setIsRegistering }) => {
           style={{
             padding: "10px",
             fontSize: "16px",
-            border: "1px solid #ddd",
+            border: fieldErrors.password ? "1px solid red" : "1px solid #ddd",
             borderRadius: "5px",
           }}
         />
+        {fieldErrors.password && (
+          <span style={{ color: "red", fontSize: "12px" }}>
+            {fieldErrors.password}
+          </span>
+        )}
+
         <button
           type="submit"
           style={{
