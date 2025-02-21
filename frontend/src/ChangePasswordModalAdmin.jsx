@@ -1,46 +1,42 @@
 import React, { useState } from "react";
 
-const ChangePasswordModal = ({ onClose }) => {
-  const [password, setPassword] = useState("");
+const ChangePasswordModalAdmin = ({ onClose, username1 }) => {
+  const [newPassword, setNewPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const token = localStorage.getItem("access_token");
+    console.log("ZMIANA:", username1);
+    // Log the correct variable name
 
     if (!token) {
       alert("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
-      return;
+      return; // Exit early if no token
     }
 
     try {
-      const response = await fetch("http://localhost:8000/auth/", {
-        // Poprawiony endpoint
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username: loggedInUser, password: password }),
-      });
-
+      const response = await fetch(
+        `http://localhost:8000/admin/reset-password?username=${encodeURIComponent(
+          username1
+        )}&new_password=${encodeURIComponent(newPassword)}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      //console.log(respone);
       if (response.ok) {
         alert("Hasło zostało zmienione.");
         onClose();
       } else {
         const errorData = await response.json();
-
-        // Obsługa błędu zgodnie ze specyfikacją (422)
-        if (response.status === 422 && errorData.detail) {
-          const errorMsg = errorData.detail
-            .map((err) => `${err.loc.join(" -> ")}: ${err.msg}`)
-            .join("\n");
-          alert(`Błąd walidacji:\n${errorMsg}`);
-        } else {
-          alert(
-            `Błąd: ${errorData.message || "Błędne hasło, Spróbuj ponownie."}`
-          );
-        }
+        alert(
+          `Błąd: ${errorData.message || "Błędne hasło, Spróbuj ponownie."}`
+        );
       }
     } catch (error) {
       console.error("Error:", error);
@@ -65,21 +61,20 @@ const ChangePasswordModal = ({ onClose }) => {
     >
       <h2>Zmień hasło</h2>
       <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: "10px" }}></div>
         <div style={{ marginBottom: "10px" }}>
           <label>
             Nowe hasło:
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               style={{ marginLeft: "10px", padding: "5px", width: "90%" }}
             />
           </label>
         </div>
-        <div style={{ marginBottom: "10px" }}></div>
         <button
           type="submit"
-          onClick={onClose}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
@@ -113,4 +108,4 @@ const ChangePasswordModal = ({ onClose }) => {
   );
 };
 
-export default ChangePasswordModal;
+export default ChangePasswordModalAdmin;

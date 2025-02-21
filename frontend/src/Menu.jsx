@@ -45,6 +45,23 @@ const Menu = ({ setCurrentScreen, handleLogout, setSelectedProject }) => {
         Dane konta
       </button>
       <button
+        onClick={() => {
+          setCurrentScreen("AdminPanel"); // Ustawienie ekranu na projekty
+          setSelectedProject(null); // Resetowanie wybranego projektu
+        }}
+        style={{
+          padding: "15px",
+          fontSize: "16px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+      >
+        Admin Panel
+      </button>
+      <button
         onClick={handleLogout} // Obsługa wylogowania
         style={{
           padding: "15px",
