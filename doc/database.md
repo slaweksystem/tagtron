@@ -78,3 +78,6 @@ Baza danych składa się z kilku powiązanych ze sobą tabel, które przechowuj�
 - id: Unikalny identyfikator roli w projekcie.
 - name: Nazwa roli w projekcie (np. "Owner", "Member", "Modder").
 
+## Diagram bazy danych
+
+![diagram](media/baza-danych-diagram.PNG)
