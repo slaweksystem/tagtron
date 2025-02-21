@@ -2,21 +2,28 @@ import React, { useState } from "react";
 
 const ChangePasswordModal = ({ onClose }) => {
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const token = localStorage.getItem("access_token");
+
+    // Log the correct variable name
+
+    if (!token) {
+      alert("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      return; // Exit early if no token
+    }
+
     try {
-      const response = await fetch("http://localhost:8000/user/password", {
+      const response = await fetch("http://localhost:8000/auth", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`, // Token autoryzacyjny
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ password, new_password: newPassword }),
+        body: JSON.stringify({ username: loggedInUser, password: password }),
       });
-
       if (response.ok) {
         alert("Hasło zostało zmienione.");
         onClose();
@@ -51,7 +58,7 @@ const ChangePasswordModal = ({ onClose }) => {
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "10px" }}>
           <label>
-            Obecne hasło:
+            Nowe hasło:
             <input
               type="password"
               value={password}
@@ -60,19 +67,10 @@ const ChangePasswordModal = ({ onClose }) => {
             />
           </label>
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label>
-            Nowe hasło:
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              style={{ marginLeft: "10px", padding: "5px", width: "90%" }}
-            />
-          </label>
-        </div>
+        <div style={{ marginBottom: "10px" }}></div>
         <button
           type="submit"
+          onClick={onClose}
           style={{
             padding: "10px 20px",
             fontSize: "16px",
