@@ -2,10 +2,7 @@ from typing import Annotated
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy import select
-from fastapi import Depends, HTTPException, status, Path , Query, status
-from fastapi_pagination.ext.sqlalchemy import paginate
-from fastapi_pagination import Page, paginate
+from fastapi import Depends, HTTPException, status, Path , Query
 from ..models import Base, ProjectRoles, Roles
 from ..models import Projects
 from ..models import ProjectUsers
@@ -144,8 +141,9 @@ async def get_users(user: user_dependency,
     
     # Fetch users assigned to the project
     project_users = (
-        db.query(ProjectUsers, Users)
+        db.query(ProjectUsers, Users, ProjectRoles.name)
         .join(Users, ProjectUsers.user_id == Users.id)
+        .join(ProjectRoles, ProjectUsers.role_id == ProjectRoles.id)
         .filter(ProjectUsers.project_id == project_id)
         .all()
     )
@@ -158,8 +156,10 @@ async def get_users(user: user_dependency,
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role_id": project_user.role_id,
+            "role": role_name,
+            "project_user_id": project_user.id,
         }
-        for project_user, user in project_users
+        for project_user, user, role_name in project_users
     ]
 
     return JSONResponse(
@@ -264,3 +264,39 @@ async def add_user_email(user: user_dependency,
         return {"message": "User added"}
 
     raise HTTPException(status_code=401, detail = 'Unauthorized :(')
+
+@router.get("/check_role/{project_id}", status_code=status.HTTP_200_OK)
+async def get_role(user: user_dependency,
+                    db: db_dependency,
+                    project_id: int = Path(gt=0)):
+    
+    # Ensure user is authenticated
+    if user is None:
+        raise HTTPException(status_code=401, detail='Authentication Failed')
+
+     # Check if the user is assigned to the project
+    is_assigned = (
+        db.query(ProjectUsers)
+        .filter(ProjectUsers.project_id == project_id, ProjectUsers.user_id == user['id'])
+        .first()
+    )
+
+    is_owner = (
+        db.query(Projects.id == project_id, Projects.owner_id == user['id'])
+    )
+
+    is_admin = (
+        db.query(Users.id == user['id'], Users.role_id == 2)
+                )
+
+    if not is_assigned and not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="You are not allowed to view this project")
+    
+    # Fetch users assigned to the project
+    user_role_id = db.query(ProjectUsers).filter(ProjectUsers.user_id == user['id']).first().role_id
+    project_role = (db.query(ProjectRoles).filter(ProjectRoles.id == user_role_id).first()).name
+
+
+    return JSONResponse(
+        content={"role": project_role, "message": ""}, status_code=200
+    )

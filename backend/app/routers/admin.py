@@ -8,7 +8,7 @@ from ..models import Base
 from ..models import Users, Roles
 from ..database import get_db
 from .auth import get_current_user
-from ..database import engine, SessionLocal
+from ..database import engine
 
 router = APIRouter(
     prefix="/admin",
@@ -22,15 +22,40 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
 class ResetPasswordRequest(BaseModel):
-    user_id: int
+    username: str
     new_password: str
 
 def is_admin(user: Users, db: Session):
     """Check if the user has an admin role."""
     admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
     return admin_role and user.role_id == admin_role.id
+
+@router.get("/users", status_code=status.HTTP_200_OK)
+async def get_users(
+    user: user_dependency, 
+    db: db_dependency,
+):
+    """
+    Fetch information about users. Admin access is required.
+    """
+    user_data = db.query(Users).filter(Users.id == user["id"]).first()
+    
+    if not is_admin(user_data, db):
+        raise HTTPException(status_code=403, detail="Only admins can view user information")
+    
+    query = db.query(Users)
+    users = query.all()
+    
+    return [{
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "first_name": u.first_name,
+        "last_name": u.last_name,
+        "is_active": u.is_active,
+        "role_id": u.role_id
+    } for u in users]
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
@@ -46,7 +71,7 @@ async def reset_password(
     if not is_admin(user_data, db):
         raise HTTPException(status_code=403, detail="Only admins can reset passwords")
 
-    user_to_update = db.query(Users).filter(Users.id == request.user_id).first()
+    user_to_update = db.query(Users).filter(Users.username == request.username).first()
 
     if not user_to_update:
         raise HTTPException(status_code=404, detail="User not found")

@@ -4,7 +4,7 @@ import UserAddModal from "./UserAddModal";
 
 const Canvas = ({ projectDescription, projectId, projectTitle }) => {
   const [images, setImages] = useState([]); // Lista obrazów
-  const [currentImageIndex, setCurrentImageIndex] = useState(0); // Indeks aktualnie wyświetlanego obrazu
+  const [currentImageIndex, setCurrentImageIndex] = useState(-1); // Indeks aktualnie wyświetlanego obrazu
   const [imagePath, setImagePath] = useState(""); // Ścieżka do obrazu
   const [rectangle, setRectangle] = useState(null); // Dane prostokąta
   const [drawing, setDrawing] = useState(false); // Status rysowania
@@ -25,12 +25,8 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     handleGetImages();
   }, []);
 
+  // Pobieranie etykiet
   const fetchLabels = async (imageId) => {
-    //if (!images || images.length == 0 || !images[currentImageIndex]) {
-    //console.warn("Brak dostępnych obrazów, nie można pobrać etykiet.");
-    //return; // Jeśli brak obrazów, nie pobieraj etykiet
-    //}
-
     try {
       const token = localStorage.getItem("access_token");
 
@@ -89,6 +85,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
 
       const data = await response.json();
       setUsers(data.users);
+      console.log(data);
     } catch (error) {
       console.error("Błąd podczas pobierania użytkowników:", error);
       alert("Wystąpił błąd podczas pobierania użytkowników.");
@@ -123,11 +120,13 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       if (data && Array.isArray(data) && data.length > 0) {
         setImages(data);
         loadImage(data[0].id); // Załaduj pierwszy obraz
+        setCurrentImageIndex(0);
         fetchLabels(data[0].id);
       } else {
         throw new Error("Brak dostępnych obrazów.");
       }
     } catch (error) {
+      setCurrentImageIndex(-1);
       console.error("Błąd podczas pobierania obrazów:", error);
       alert("Wystąpił błąd podczas pobierania obrazów.");
     }
@@ -162,6 +161,50 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     } catch (error) {
       console.error("Błąd podczas ładowania obrazu:", error);
       alert("Wystąpił błąd podczas ładowania obrazu.");
+    }
+  };
+
+  // Ładowanie obrazu bez labeli
+  const loadUnlabelImage = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
+      }
+
+      const response = await fetch(
+        `http://localhost:8000/images/unlabeled-image/${projectId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 404) {
+        // Obsługuje brak treści w odpowiedzi, ale uznaje to za sukces
+        alert("Brak zdjęc bez labelów.");
+        return;
+      } else {
+        if (!response.ok) {
+          throw new Error(`Błąd: ${response.status}`);
+        }
+
+        const data = await response.json();
+        for (let i = 0; i < images.length; i++) {
+          if (images[i].id == data.image_id) {
+            setCurrentImageIndex(i);
+            loadImage(images[i].id);
+            fetchLabels(images[i].id);
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Błąd funkcji.");
     }
   };
 
@@ -221,7 +264,6 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
     if (!label || !rectangle) {
       alert("Proszę podać etykietę i narysować prostokąt.");
       return;
-      fetchLabels();
     }
 
     // Przygotowanie danych do wysłania, zgodnie z wymaganiami API
@@ -263,7 +305,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       setRectangle(null); // Usuwamy prostokąt
       setLabel(null); // Usuwamy etykietę
       setLabelInput(""); // Wyczyść pole tekstowe
-
+      fetchLabels(images[currentImageIndex].id);
       alert("Etykieta zapisana pomyślnie!");
     } catch (error) {
       console.error("Błąd podczas zapisywania etykiety:", error);
@@ -280,30 +322,26 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
         throw new Error("Brak tokena autoryzacyjnego. Zaloguj się ponownie.");
       }
 
-      console.log(imageId, labelId);
       const response = await fetch(
         `http://localhost:8000/images/labels/${imageId}/${labelId}`,
         {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(labelRequest),
         }
       );
-      console.log(fetch);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Błąd usuwania etykiety");
       }
 
       console.log("Etykieta usunięta pomyślnie");
-      // Możesz dodać dodatkowe akcje, np. odświeżenie listy etykiet
-      //setRectangle(null); // Usuwamy prostokąt
-      //setLabel(null); // Usuwamy etykietę
-      //setLabelInput(""); // Wyczyść pole tekstowe
-      //alert("Etykieta usunięta pomyślnie!");
+      fetchLabels(images[currentImageIndex].id);
+
+      setRectangle(null); // Usuwamy prostokąt
+      setLabel(null); // Usuwamy etykietę
+      setLabelInput(""); // Wyczyść pole tekstowe
     } catch (error) {
       console.error("Błąd podczas usuwania etykiety:", error);
       alert("Wystąpił błąd podczas usuwania etykiety.");
@@ -328,8 +366,25 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
       {users.length > 0 ? (
         <ul>
           {users.map((user) => (
-            <li key={user.id}>
-              {user.first_name} {user.last_name} ({user.email})
+            <li
+              key={user.id}
+              style={{ display: "flex", alignItems: "center", gap: "10px" }}
+            >
+              <span>
+                {user.first_name} {user.last_name} ({user.email}) {user.role}
+              </span>
+              <button
+                onClick={() => console.log("usuwam:", user.email)}
+                style={{
+                  padding: "5px 10px",
+                  backgroundColor: "red",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                }}
+              >
+                usun
+              </button>
             </li>
           ))}
         </ul>
@@ -491,11 +546,25 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
         >
           Następne
         </button>
+        <span style={{ margin: "0 10px" }}></span>
+        <button
+          onClick={() => loadUnlabelImage()}
+          style={{
+            padding: "5px 10px",
+            backgroundColor: "#FF5722",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+          }}
+        >
+          Idź do bez labela
+        </button>
       </div>
 
       {/* Lista użytkowników */}
       <div style={{ marginTop: "20px" }}>
         <h3>Użytkownicy w projekcie:</h3>
+
         {renderUsers()}
         <button
           onClick={() => setShowUserAddModal(true)}

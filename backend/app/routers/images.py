@@ -15,6 +15,7 @@ from PIL import Image
 from ..models import Base
 from ..models import Roles
 from ..models import Projects
+from ..models import ProjectRoles
 from ..models import ProjectUsers
 from ..models import Images
 from ..models import Labels
@@ -67,6 +68,33 @@ def is_admin_or_project_member(user: user_dependency,
     ).first()
 
     return is_admin or is_project_member
+
+def is_owner_or_moderator(user: user_dependency,
+                          db: db_dependency,
+                          project_id):
+    """
+    Check if the user has the role of 'Owner' or 'Moderator' in the given project.
+    """
+    # Check if Admin
+    admin_role = db.query(Roles).filter(Roles.name == "Admin").first()
+    user_data : Users = db.query(Users).filter(Users.id == user["id"]).first()
+    is_admin = admin_role and user_data.role_id == admin_role.id
+
+    if is_admin:
+        return True
+
+    # Check if project role matches
+    project_role = db.query(ProjectUsers).filter(
+        ProjectUsers.project_id == project_id,
+        ProjectUsers.user_id == user["id"]
+    ).first()
+    
+    if not project_role:
+        return False
+    
+    role = db.query(ProjectRoles).filter(ProjectRoles.id == project_role.role_id).first()
+    
+    return role and role.name in ["Owner", "Moderator"]
 
 @router.get("/{project_id}", status_code=status.HTTP_200_OK)
 async def read_project_images(user: user_dependency, db: db_dependency, project_id:int = Path(gt=0)):
@@ -148,6 +176,34 @@ async def remove_image(user: user_dependency, db: db_dependency,
                        image_id:int = Path()):
     pass
 
+@router.delete("/delete/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_image(
+    user: user_dependency, db: db_dependency, image_id: int = Path(gt=0)
+):
+    """
+    Deletes an image and all associated labels if the user is an admin or the image owner.
+    """
+    image = db.query(Images).filter(Images.id == image_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    if not is_admin_or_project_member(user, db, image.project_id):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this image")
+    
+    # Delete associated labels
+    db.query(Labels).filter(Labels.image_id == image_id).delete()
+    
+    # Delete the image file from the storage
+    file_path = OSPath(image.path)
+    if file_path.exists():
+        file_path.unlink()
+    
+    # Delete the image record from the database
+    db.delete(image)
+    db.commit()
+    
+    return {"message": "Image and related labels deleted successfully"}
+
 @router.post("/multi-add/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def add_mnultiple_images(user: user_dependency, db: db_dependency, project_id:int = Path(gt=0)):
     pass
@@ -226,7 +282,6 @@ async def update_label(user: user_dependency, db: db_dependency,
 
     return {"message": "Label updated successfully", "label_id": label.id}
 
-
 @router.delete("/labels/{image_id}/{label_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_label(user: user_dependency, db: db_dependency, 
                        image_id: int = Path(gt=0), 
@@ -237,8 +292,15 @@ async def delete_label(user: user_dependency, db: db_dependency,
     label = db.query(Labels).filter(Labels.id == label_id, Labels.image_id == image_id).first()
     if not label:
         raise HTTPException(status_code=404, detail="Label not found")
+    
+    image = db.query(Images).filter(Images.id == image_id).first()
 
-    if not is_admin_or_project_member(user, db, label.image.project_id) and label.owner_id != user["id"]:
+    if not image:
+        # Something is wrong - delete label
+        db.delete(label)
+        return {"message": "Label deleted successfully"}
+
+    if not is_admin_or_project_member(user, db, image.project_id) and label.owner_id != user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized to delete this label")
 
     db.delete(label)
