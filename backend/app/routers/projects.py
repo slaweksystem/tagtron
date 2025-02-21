@@ -99,6 +99,19 @@ async def create_project(user: user_dependency,
     db.add(project)
     db.commit()
 
+    owner_id = db.query(ProjectRoles).filter(ProjectRoles.name == "Owner").first().id
+
+    project_user = ProjectUsers(
+    project_id=project.id,
+    user_id=user["id"],
+    role_id = owner_id
+    )
+
+
+
+    db.add(project_user)
+    db.commit()
+
     return {"id": project.id, "title": project.title}
 
 # Delete a project
