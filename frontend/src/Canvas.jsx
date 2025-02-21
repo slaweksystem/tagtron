@@ -16,7 +16,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
   const [showImageUploadModal, setShowImageUploadModal] = useState(false); // Stan do wyświetlania modala
   const [showUserAddModal, setShowUserAddModal] = useState(false);
   const [labels, setLabels] = useState([]); // Lista etykiet
-  const [role, setRole] = useState([]);
+  const [role, setRole] = useState("");
   const canvasRef = useRef(null);
 
   // Załaduj użytkowników i obrazy po załadowaniu komponentu
@@ -85,6 +85,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
 
       const data = await response.json();
       setUsers(data.users);
+      checkRole();
     } catch (error) {
       console.error("Błąd podczas pobierania użytkowników:", error);
       alert("Wystąpił błąd podczas pobierania użytkowników.");
@@ -434,7 +435,7 @@ const Canvas = ({ projectDescription, projectId, projectTitle }) => {
               <span>
                 {user.first_name} {user.last_name} ({user.email}) {user.role}
               </span>
-              {(role === "Owner" || role === "Modder") && (
+              {(role === "Owner" || role === "Modder" || role === "Admin") && (
                 <button
                   onClick={() => handleDeleteUser(user.project_user_id)}
                   style={{
