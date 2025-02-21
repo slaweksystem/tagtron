@@ -4,6 +4,8 @@
 
 Tagtron to narzędzie do gromadzenia i oznaczania obrazów.
 
+---
+
 ## Szczegóły
 
 Aplikacja składa się z:
